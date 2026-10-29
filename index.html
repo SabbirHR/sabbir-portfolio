@@ -11,6 +11,10 @@
 
 <body>
 
+    <!-- Decorative background layers: blueprint grid (behind) + Three.js canvas (single fixed renderer) -->
+    <div class="bg-grid" aria-hidden="true"></div>
+    <canvas id="bg-canvas" aria-hidden="true"></canvas>
+
     <!-- Header -->
     <header class="site-header">
         <div class="container header-inner">
@@ -52,7 +56,6 @@
 
     <!-- Hero Section -->
     <section id="home" class="hero">
-        <div class="blueprint-bg"></div>
         <div class="hero-gradient"></div>
 
         <div class="container hero-grid">
@@ -466,6 +469,15 @@
     </footer>
 
     <script src="assets/js/main.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module" src="assets/js/three-scene.js"></script>
 </body>
 
 </html>
