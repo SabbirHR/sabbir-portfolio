@@ -1159,6 +1159,11 @@ textarea.form-control {
    Responsive
    ========================================================================== */
 @media (max-width: 767px) {
+    .site-header {
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
     .nav-toggle {
         display: block;
     }
