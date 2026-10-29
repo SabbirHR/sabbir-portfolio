@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sabbir Hossain Rajib | Senior Software Engineer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -13,91 +12,81 @@
 <body>
 
     <!-- Header -->
-    <header class="fixed top-0 w-full z-50 border-b border-[#1a1a1a] bg-black/80 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 bg-white text-black flex items-center justify-center font-bold text-xl rounded-sm">S
-                </div>
-                <span class="font-bold tracking-tighter text-lg uppercase hidden sm:block">Sabbir<span
-                        class="text-zinc-600">.</span></span>
-            </div>
-            <nav class="hidden md:flex space-x-10">
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="#about" class="brand" aria-label="Sabbir Hossain Rajib — home">
+                <div class="brand-mark">S</div>
+                <span class="brand-name">Sabbir<span class="brand-dot">.</span></span>
+            </a>
+            <nav class="main-nav" aria-label="Primary">
                 <a href="#about" class="nav-link">About</a>
                 <a href="#work" class="nav-link">Projects</a>
                 <a href="#stack" class="nav-link">Stack</a>
                 <a href="#experience" class="nav-link">Experience</a>
                 <a href="#contact" class="nav-link">Contact</a>
             </nav>
-            <div class="flex items-center space-x-6">
-                <a href="https://github.com/SabbirHR" target="_blank"
-                    class="text-zinc-500 hover:text-white transition-colors"><i
-                        class="fa-brands fa-github text-xl"></i></a>
-                <a href="https://www.linkedin.com/in/md-sabbir-hossain-rajib-78b735221" target="_blank"
-                    class="text-zinc-500 hover:text-white transition-colors"><i
-                        class="fa-brands fa-linkedin text-xl"></i></a>
-                <a href="mailto:sabbirhossainrajib.office@gmail.com"
-                    class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-5 py-2 text-xs font-bold rounded-md hover:bg-cyan-500 hover:text-black transition-all uppercase">Hire
-                    Me</a>
+            <div class="header-actions">
+                <a href="https://github.com/SabbirHR" target="_blank" rel="noopener" class="social-link"
+                    aria-label="GitHub profile"><i class="fa-brands fa-github"></i></a>
+                <a href="https://www.linkedin.com/in/md-sabbir-hossain-rajib-78b735221" target="_blank" rel="noopener"
+                    class="social-link" aria-label="LinkedIn profile"><i class="fa-brands fa-linkedin"></i></a>
+                <a href="mailto:sabbirhossainrajib.office@gmail.com" class="btn-hire">Hire Me</a>
             </div>
         </div>
     </header>
 
     <!-- Hero Section -->
-    <section id="about" class="relative min-h-screen flex items-center pt-20 overflow-hidden">
+    <section id="about" class="hero">
         <div class="blueprint-bg"></div>
-        <div class="hero-gradient absolute inset-0"></div>
+        <div class="hero-gradient"></div>
 
-        <div class="max-w-7xl mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+        <div class="container hero-grid">
             <div>
-                <div class="section-tag mb-6">Senior Software Engineer</div>
-                <h1 class="text-6xl lg:text-8xl font-bold tracking-tighter leading-none mb-8">
-                    Building <span class="cyan-glow">Logic</span> That Ships.
-                </h1>
-                <p class="text-zinc-400 text-lg lg:text-xl max-w-lg leading-relaxed mb-10">
+                <div class="section-tag hero-tag">Senior Software Engineer</div>
+                <h1 class="hero-title">Building <span class="cyan-glow">Logic</span> That Ships.</h1>
+                <p class="hero-desc">
                     Sabbir Hossain Rajib — A results-driven engineer specializing in high-performance backend
                     architectures, resilient databases, and automated infrastructure.
                 </p>
-                <div class="flex flex-wrap gap-4">
-                    <div class="p-6 glass-card rounded-lg flex-1 min-w-[140px]">
-                        <div class="text-3xl font-bold mb-1">4+</div>
-                        <div class="text-[10px] uppercase tracking-widest text-zinc-500">Years Experience</div>
+                <div class="stats">
+                    <div class="stat-card glass-card">
+                        <div class="stat-value">4+</div>
+                        <div class="stat-label">Years Experience</div>
                     </div>
-                    <div class="p-6 glass-card rounded-lg flex-1 min-w-[140px]">
-                        <div class="text-3xl font-bold mb-1">50+</div>
-                        <div class="text-[10px] uppercase tracking-widest text-zinc-500">Modules Deployed</div>
+                    <div class="stat-card glass-card">
+                        <div class="stat-value">50+</div>
+                        <div class="stat-label">Modules Deployed</div>
                     </div>
-                    <div class="p-6 glass-card rounded-lg flex-1 min-w-[140px]">
-                        <div class="text-3xl font-bold mb-1">99.9%</div>
-                        <div class="text-[10px] uppercase tracking-widest text-zinc-500">System Uptime</div>
+                    <div class="stat-card glass-card">
+                        <div class="stat-value">99.9%</div>
+                        <div class="stat-label">System Uptime</div>
                     </div>
                 </div>
             </div>
 
             <!-- Code Block Visual -->
-            <div class="relative group hidden lg:block">
-                <div class="absolute -inset-4 bg-cyan-500/5 blur-2xl rounded-full"></div>
-                <div class="glass-card rounded-xl p-1 overflow-hidden">
-                    <div class="bg-[#050505] p-6 rounded-lg mono text-sm leading-relaxed">
-                        <div class="flex space-x-2 mb-4">
-                            <div class="w-3 h-3 rounded-full bg-red-500/50"></div>
-                            <div class="w-3 h-3 rounded-full bg-yellow-500/50"></div>
-                            <div class="w-3 h-3 rounded-full bg-green-500/50"></div>
+            <div class="hero-visual">
+                <div class="hero-visual-glow"></div>
+                <div class="glass-card code-window">
+                    <div class="code-body">
+                        <div class="code-dots">
+                            <div class="code-dot dot-red"></div>
+                            <div class="code-dot dot-yellow"></div>
+                            <div class="code-dot dot-green"></div>
                         </div>
-                        <p class="text-zinc-500 italic">// Engineering Philosophy</p>
-                        <p><span class="text-purple-400">class</span> <span
-                                class="text-cyan-400">BackendArchitect</span> {</p>
-                        <p class="pl-4"><span class="text-purple-400">public</span> <span
-                                class="text-yellow-400">function</span> <span
-                                class="text-blue-400">deployProduction</span>() {</p>
-                        <p class="pl-8"><span class="text-purple-400">return</span> [</p>
-                        <p class="pl-12"><span class="text-green-400">'framework'</span> => <span
-                                class="text-green-400">'Laravel'</span>,</p>
-                        <p class="pl-12"><span class="text-green-400">'paradigm'</span> => <span
-                                class="text-green-400">'OOP & MVC'</span>,</p>
-                        <p class="pl-12"><span class="text-green-400">'infrastructure'</span> => <span
-                                class="text-green-400">'Nginx / Linux'</span></p>
-                        <p class="pl-8">];</p>
-                        <p class="pl-4">}</p>
+                        <p class="code-comment">// Engineering Philosophy</p>
+                        <p><span class="tok-keyword">class</span> <span class="tok-class">BackendArchitect</span> {</p>
+                        <p class="indent-1"><span class="tok-keyword">public</span> <span
+                                class="tok-func">function</span> <span class="tok-call">deployProduction</span>() {</p>
+                        <p class="indent-2"><span class="tok-keyword">return</span> [</p>
+                        <p class="indent-3"><span class="tok-string">'framework'</span> => <span
+                                class="tok-string">'Laravel'</span>,</p>
+                        <p class="indent-3"><span class="tok-string">'paradigm'</span> => <span
+                                class="tok-string">'OOP &amp; MVC'</span>,</p>
+                        <p class="indent-3"><span class="tok-string">'infrastructure'</span> => <span
+                                class="tok-string">'Nginx / Linux'</span></p>
+                        <p class="indent-2">];</p>
+                        <p class="indent-1">}</p>
                         <p>}</p>
                     </div>
                 </div>
@@ -106,90 +95,88 @@
     </section>
 
     <!-- Technical Expertise -->
-    <section id="stack" class="py-32 bg-[#050505]">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-20">
-                <div class="section-tag mb-4">Arsenal</div>
-                <h2 class="text-4xl md:text-5xl font-bold tracking-tighter">Technical Expertise</h2>
+    <section id="stack" class="section section-alt">
+        <div class="container">
+            <div class="section-head">
+                <div class="section-tag">Arsenal</div>
+                <h2 class="section-title">Technical Expertise</h2>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div class="skills-grid">
                 <!-- Column 1: Backend -->
-                <div class="space-y-6">
-                    <div class="flex items-center space-x-3 border-b border-zinc-800 pb-4">
-                        <i class="fa-solid fa-code text-cyan-400"></i>
-                        <h4 class="mono text-xs text-zinc-400 uppercase tracking-widest">Backend & Framework</h4>
+                <div class="skill-group">
+                    <div class="skill-group-head">
+                        <i class="fa-solid fa-code"></i>
+                        <h4 class="skill-group-title">Backend &amp; Framework</h4>
                     </div>
-                    <ul class="space-y-3">
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">Laravel</span>
-                            <span class="text-[9px] text-cyan-500 mono">SENIOR</span>
+                    <ul class="skill-list">
+                        <li class="skill-item"><span class="skill-name">Laravel</span>
+                            <span class="badge badge-accent">SENIOR</span>
                         </li>
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">REST API
-                                Development</span> <span class="text-[9px] text-zinc-600 mono">EXPERT</span></li>
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">Architecture
-                                Design</span> <span class="text-[9px] text-zinc-600 mono">RESTFUL</span></li>
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">MVC
-                                Architecture</span> <span class="text-[9px] text-zinc-600 mono">CORE</span></li>
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">OOP
-                                Paradigm</span> <span class="text-[9px] text-zinc-600 mono">SOLID</span></li>
+                        <li class="skill-item"><span class="skill-name">REST API Development</span> <span
+                                class="badge">EXPERT</span></li>
+                        <li class="skill-item"><span class="skill-name">Architecture Design</span> <span
+                                class="badge">RESTFUL</span></li>
+                        <li class="skill-item"><span class="skill-name">MVC Architecture</span> <span
+                                class="badge">CORE</span></li>
+                        <li class="skill-item"><span class="skill-name">OOP Paradigm</span> <span
+                                class="badge">SOLID</span></li>
                     </ul>
                 </div>
 
                 <!-- Column 2: Data Systems -->
-                <div class="space-y-6">
-                    <div class="flex items-center space-x-3 border-b border-zinc-800 pb-4">
-                        <i class="fa-solid fa-database text-cyan-400"></i>
-                        <h4 class="mono text-xs text-zinc-400 uppercase tracking-widest">Database & Systems</h4>
+                <div class="skill-group">
+                    <div class="skill-group-head">
+                        <i class="fa-solid fa-database"></i>
+                        <h4 class="skill-group-title">Database &amp; Systems</h4>
                     </div>
-                    <ul class="space-y-3">
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">MariaDB /
-                                MySQL</span> <span class="text-[9px] text-cyan-500 mono">TUNED</span></li>
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">Design &
-                                Optimization</span> <span class="text-[9px] text-zinc-600 mono">QUERY</span></li>
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">ERP
-                                Systems</span> <span class="text-[9px] text-zinc-600 mono">MODULES</span></li>
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">LMS
-                                Development</span> <span class="text-[9px] text-zinc-600 mono">SCALE</span></li>
-                        <li class="flex justify-between items-center text-sm"><span
-                                class="text-zinc-300">PostgreSQL</span> <span
-                                class="text-[9px] text-zinc-600 mono">ADV</span></li>
+                    <ul class="skill-list">
+                        <li class="skill-item"><span class="skill-name">MariaDB / MySQL</span>
+                            <span class="badge badge-accent">TUNED</span></li>
+                        <li class="skill-item"><span class="skill-name">Design &amp; Optimization</span> <span
+                                class="badge">QUERY</span></li>
+                        <li class="skill-item"><span class="skill-name">ERP Systems</span> <span
+                                class="badge">MODULES</span></li>
+                        <li class="skill-item"><span class="skill-name">LMS Development</span> <span
+                                class="badge">SCALE</span></li>
+                        <li class="skill-item"><span class="skill-name">PostgreSQL</span> <span
+                                class="badge">ADV</span></li>
                     </ul>
                 </div>
 
                 <!-- Column 3: Infrastructure -->
-                <div class="space-y-6">
-                    <div class="flex items-center space-x-3 border-b border-zinc-800 pb-4">
-                        <i class="fa-solid fa-server text-cyan-400"></i>
-                        <h4 class="mono text-xs text-zinc-400 uppercase tracking-widest">DevOps & Infra</h4>
+                <div class="skill-group">
+                    <div class="skill-group-head">
+                        <i class="fa-solid fa-server"></i>
+                        <h4 class="skill-group-title">DevOps &amp; Infra</h4>
                     </div>
-                    <ul class="space-y-3">
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">Linux Server
-                                Admin</span> <span class="text-[9px] text-cyan-500 mono">SUDO</span></li>
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">Nginx /
-                                Apache</span> <span class="text-[9px] text-zinc-600 mono">CONFIG</span></li>
-                        <li class="flex justify-between items-center text-sm"><span
-                                class="text-zinc-300">DigitalOcean</span> <span
-                                class="text-[9px] text-zinc-600 mono">CLOUD</span></li>
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">Docker
-                                Engine</span> <span class="text-[9px] text-zinc-600 mono">CONT</span></li>
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">Deployment
-                                Flow</span> <span class="text-[9px] text-zinc-600 mono">AUTOMATE</span></li>
+                    <ul class="skill-list">
+                        <li class="skill-item"><span class="skill-name">Linux Server Admin</span>
+                            <span class="badge badge-accent">SUDO</span></li>
+                        <li class="skill-item"><span class="skill-name">Nginx / Apache</span> <span
+                                class="badge">CONFIG</span></li>
+                        <li class="skill-item"><span class="skill-name">DigitalOcean</span> <span
+                                class="badge">CLOUD</span></li>
+                        <li class="skill-item"><span class="skill-name">Docker Engine</span> <span
+                                class="badge">CONT</span></li>
+                        <li class="skill-item"><span class="skill-name">Deployment Flow</span> <span
+                                class="badge">AUTOMATE</span></li>
                     </ul>
                 </div>
 
                 <!-- Column 4: Tools -->
-                <div class="space-y-6">
-                    <div class="flex items-center space-x-3 border-b border-zinc-800 pb-4">
-                        <i class="fa-solid fa-toolbox text-cyan-400"></i>
-                        <h4 class="mono text-xs text-zinc-400 uppercase tracking-widest">Tools & Workflow</h4>
+                <div class="skill-group">
+                    <div class="skill-group-head">
+                        <i class="fa-solid fa-toolbox"></i>
+                        <h4 class="skill-group-title">Tools &amp; Workflow</h4>
                     </div>
-                    <ul class="space-y-3">
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">Git /
-                                GitHub</span> <span class="text-[9px] text-cyan-500 mono">VCS/CI-CD</span></li>
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">Postman (API
-                                Testing)</span> <span class="text-[9px] text-cyan-500 mono">QUALITY</span></li>
-                        <li class="flex justify-between items-center text-sm"><span class="text-zinc-300">Technical
-                                Documentation</span> <span class="text-[9px] text-zinc-600 mono">DOCS</span></li>
+                    <ul class="skill-list">
+                        <li class="skill-item"><span class="skill-name">Git / GitHub</span> <span
+                                class="badge badge-accent">VCS/CI-CD</span></li>
+                        <li class="skill-item"><span class="skill-name">Postman (API Testing)</span> <span
+                                class="badge badge-accent">QUALITY</span></li>
+                        <li class="skill-item"><span class="skill-name">Technical Documentation</span> <span
+                                class="badge">DOCS</span></li>
                     </ul>
                 </div>
             </div>
@@ -197,38 +184,36 @@
     </section>
 
     <!-- Experience Timeline -->
-    <section id="experience" class="py-32 border-t border-[#1a1a1a]">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="grid lg:grid-cols-12 gap-12">
-                <div class="lg:col-span-4">
-                    <div class="sticky top-32">
-                        <div class="section-tag mb-4">Journey</div>
-                        <h2 class="text-4xl font-bold tracking-tighter mb-6">Where I've Worked</h2>
-                        <p class="text-zinc-500">Professional evolution over 4+ years of engineering.</p>
+    <section id="experience" class="section section-bordered">
+        <div class="container">
+            <div class="experience-grid">
+                <div class="experience-aside">
+                    <div class="experience-aside-inner">
+                        <div class="section-tag">Journey</div>
+                        <h2 class="experience-title">Where I've Worked</h2>
+                        <p class="text-dim">Professional evolution over 4+ years of engineering.</p>
                     </div>
                 </div>
-                <div class="lg:col-span-8 pl-12 relative">
+                <div class="experience-main timeline">
                     <div class="timeline-line"></div>
 
-                    <div class="relative mb-20 group">
+                    <div class="timeline-item">
                         <div class="timeline-dot"></div>
-                        <span class="mono text-[10px] text-cyan-500 uppercase tracking-widest mb-2 block">2024 —
-                            Present</span>
-                        <h3 class="text-2xl font-bold mb-2">Trends Bird Limited</h3>
-                        <p class="text-zinc-300 font-medium mb-4">Senior Software Engineer</p>
-                        <p class="text-zinc-500 text-sm leading-relaxed max-w-xl">
+                        <span class="timeline-date">2024 — Present</span>
+                        <h3 class="timeline-company">Trends Bird Limited</h3>
+                        <p class="timeline-role">Senior Software Engineer</p>
+                        <p class="timeline-desc">
                             Lead engineering for enterprise-grade applications. Directing architectural shifts towards
                             containerization and highly available database designs with MariaDB and PostgreSQL.
                         </p>
                     </div>
 
-                    <div class="relative group">
-                        <div class="timeline-dot bg-zinc-700 shadow-none"></div>
-                        <span class="mono text-[10px] text-zinc-600 uppercase tracking-widest mb-2 block">2022 —
-                            2024</span>
-                        <h3 class="text-2xl font-bold mb-2">Trends Bird Limited</h3>
-                        <p class="text-zinc-300 font-medium mb-4">Associate Software Engineer</p>
-                        <p class="text-zinc-500 text-sm leading-relaxed max-w-xl">
+                    <div class="timeline-item">
+                        <div class="timeline-dot timeline-dot-muted"></div>
+                        <span class="timeline-date timeline-date-muted">2022 — 2024</span>
+                        <h3 class="timeline-company">Trends Bird Limited</h3>
+                        <p class="timeline-role">Associate Software Engineer</p>
+                        <p class="timeline-desc">
                             Specialized in backend module development for internal ERP and LMS tools. Focused on query
                             optimization and integrating third-party logistics APIs.
                         </p>
@@ -239,70 +224,65 @@
     </section>
 
     <!-- Projects Grid -->
-    <section id="work" class="py-32 border-t border-[#1a1a1a]">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-20">
-                <div class="section-tag mb-4">Portfolio</div>
-                <h2 class="text-4xl md:text-5xl font-bold tracking-tighter">Production Systems</h2>
+    <section id="work" class="section section-bordered">
+        <div class="container">
+            <div class="section-head">
+                <div class="section-tag">Portfolio</div>
+                <h2 class="section-title">Production Systems</h2>
             </div>
 
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="glass-card p-8 rounded-2xl flex flex-col justify-between group">
+            <div class="projects-grid">
+                <div class="project-card glass-card">
                     <div>
-                        <div
-                            class="w-12 h-12 bg-zinc-900 rounded-lg flex items-center justify-center mb-6 group-hover:bg-cyan-500/10 transition-colors">
-                            <i class="fa-solid fa-plane text-xl group-hover:text-cyan-400 transition-colors"></i>
+                        <div class="project-icon">
+                            <i class="fa-solid fa-plane"></i>
                         </div>
-                        <h3 class="text-xl font-bold mb-4 uppercase tracking-tight">Finger Flight Admin</h3>
-                        <p class="text-zinc-500 text-sm mb-8 leading-relaxed">
+                        <h3 class="project-title">Finger Flight Admin</h3>
+                        <p class="project-desc">
                             Full-scale enterprise management dashboard. Orchestrated containerized deployment workflows
                             on Linux servers.
                         </p>
                     </div>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="mono text-[10px] text-zinc-400 border border-zinc-800 px-2 py-1">LARAVEL</span>
-                        <span class="mono text-[10px] text-zinc-400 border border-zinc-800 px-2 py-1">NGINX</span>
-                        <span class="mono text-[10px] text-zinc-400 border border-zinc-800 px-2 py-1">MARIADB</span>
+                    <div class="project-tags">
+                        <span class="tag">LARAVEL</span>
+                        <span class="tag">NGINX</span>
+                        <span class="tag">MARIADB</span>
                     </div>
                 </div>
 
-                <div class="glass-card p-8 rounded-2xl flex flex-col justify-between group">
+                <div class="project-card glass-card">
                     <div>
-                        <div
-                            class="w-12 h-12 bg-zinc-900 rounded-lg flex items-center justify-center mb-6 group-hover:bg-cyan-500/10 transition-colors">
-                            <i
-                                class="fa-solid fa-graduation-cap text-xl group-hover:text-cyan-400 transition-colors"></i>
+                        <div class="project-icon">
+                            <i class="fa-solid fa-graduation-cap"></i>
                         </div>
-                        <h3 class="text-xl font-bold mb-4 uppercase tracking-tight">STC360 LMS</h3>
-                        <p class="text-zinc-500 text-sm mb-8 leading-relaxed">
+                        <h3 class="project-title">STC360 LMS</h3>
+                        <p class="project-desc">
                             Learning Management System serving high-concurrency requests. Built on MVC architecture for
                             scalability and maintenance.
                         </p>
                     </div>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="mono text-[10px] text-zinc-400 border border-zinc-800 px-2 py-1">MYSQL</span>
-                        <span class="mono text-[10px] text-zinc-400 border border-zinc-800 px-2 py-1">PHP</span>
-                        <span class="mono text-[10px] text-zinc-400 border border-zinc-800 px-2 py-1">OOP</span>
+                    <div class="project-tags">
+                        <span class="tag">MYSQL</span>
+                        <span class="tag">PHP</span>
+                        <span class="tag">OOP</span>
                     </div>
                 </div>
 
-                <div class="glass-card p-8 rounded-2xl flex flex-col justify-between group">
+                <div class="project-card glass-card">
                     <div>
-                        <div
-                            class="w-12 h-12 bg-zinc-900 rounded-lg flex items-center justify-center mb-6 group-hover:bg-cyan-500/10 transition-colors">
-                            <i class="fa-solid fa-chart-line text-xl group-hover:text-cyan-400 transition-colors"></i>
+                        <div class="project-icon">
+                            <i class="fa-solid fa-chart-line"></i>
                         </div>
-                        <h3 class="text-xl font-bold mb-4 uppercase tracking-tight">ESales Eraj</h3>
-                        <p class="text-zinc-500 text-sm mb-8 leading-relaxed">
+                        <h3 class="project-title">ESales Eraj</h3>
+                        <p class="project-desc">
                             Complex ERP and Inventory management solution. Deployed on DigitalOcean with optimized Nginx
                             configurations.
                         </p>
                     </div>
-                    <div class="flex flex-wrap gap-2">
-                        <span
-                            class="mono text-[10px] text-zinc-400 border border-zinc-800 px-2 py-1">DIGITALOCEAN</span>
-                        <span class="mono text-[10px] text-zinc-400 border border-zinc-800 px-2 py-1">INVENTORY</span>
-                        <span class="mono text-[10px] text-zinc-400 border border-zinc-800 px-2 py-1">ERP</span>
+                    <div class="project-tags">
+                        <span class="tag">DIGITALOCEAN</span>
+                        <span class="tag">INVENTORY</span>
+                        <span class="tag">ERP</span>
                     </div>
                 </div>
             </div>
@@ -310,77 +290,70 @@
     </section>
 
     <!-- Contact Section -->
-    <section id="contact" class="py-32 border-t border-[#1a1a1a] bg-[#030303]">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="grid lg:grid-cols-2 gap-16 items-center">
+    <section id="contact" class="section section-bordered section-contact">
+        <div class="container">
+            <div class="contact-grid">
                 <div>
-                    <div class="section-tag mb-4">Get In Touch</div>
-                    <h2 class="text-5xl font-bold tracking-tighter mb-8 leading-tight">Ready to build your <br>next
-                        breakthrough?</h2>
+                    <div class="section-tag">Get In Touch</div>
+                    <h2 class="contact-title">Ready to build your <br>next breakthrough?</h2>
 
-                    <div class="space-y-6">
-                        <div class="flex items-center space-x-4">
-                            <div class="w-10 h-10 glass-card rounded-lg flex items-center justify-center">
-                                <i class="fa-solid fa-envelope text-cyan-400"></i>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <div class="contact-icon glass-card">
+                                <i class="fa-solid fa-envelope"></i>
                             </div>
                             <div>
-                                <p class="text-[10px] uppercase text-zinc-500 mono">Email Address</p>
+                                <p class="contact-label">Email Address</p>
                                 <a href="mailto:sabbirhossainrajib.office@gmail.com"
-                                    class="text-zinc-200 hover:text-cyan-400 transition-colors">sabbirhossainrajib.office@gmail.com</a>
+                                    class="contact-value">sabbirhossainrajib.office@gmail.com</a>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-4">
-                            <div class="w-10 h-10 glass-card rounded-lg flex items-center justify-center">
-                                <i class="fa-solid fa-phone text-cyan-400"></i>
+                        <div class="contact-item">
+                            <div class="contact-icon glass-card">
+                                <i class="fa-solid fa-phone"></i>
                             </div>
                             <div>
-                                <p class="text-[10px] uppercase text-zinc-500 mono">Phone / WhatsApp</p>
-                                <p class="text-zinc-200">+8801825114724</p>
+                                <p class="contact-label">Phone / WhatsApp</p>
+                                <p class="contact-value">+8801825114724</p>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-4">
-                            <div class="w-10 h-10 glass-card rounded-lg flex items-center justify-center">
-                                <i class="fa-brands fa-linkedin-in text-cyan-400"></i>
+                        <div class="contact-item">
+                            <div class="contact-icon glass-card">
+                                <i class="fa-brands fa-linkedin-in"></i>
                             </div>
                             <div>
-                                <p class="text-[10px] uppercase text-zinc-500 mono">LinkedIn Profile</p>
+                                <p class="contact-label">LinkedIn Profile</p>
                                 <a href="https://www.linkedin.com/in/md-sabbir-hossain-rajib-78b735221" target="_blank"
-                                    class="text-zinc-200 hover:text-cyan-400 transition-colors">sabbir-hossain-rajib</a>
+                                    rel="noopener" class="contact-value">sabbir-hossain-rajib</a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-card p-10 rounded-2xl relative overflow-hidden">
-                    <div class="blueprint-bg opacity-5"></div>
-                    <h3 class="text-2xl font-bold mb-6">Send a Message</h3>
+                <div class="contact-form-card glass-card">
+                    <div class="blueprint-bg blueprint-faint"></div>
+                    <h3 class="form-title">Send a Message</h3>
 
                     <!-- FormSubmit.co Integration -->
                     <form id="contact-form" action="https://formsubmit.co/ajax/sabbirhossainrajib.office@gmail.com"
-                        method="POST" class="space-y-4 relative z-10">
+                        method="POST" class="contact-form">
                         <!-- Advanced FormSubmit Config -->
                         <input type="hidden" name="_captcha" value="false">
                         <input type="hidden" name="_template" value="box">
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <input type="text" name="name" required placeholder="NAME"
-                                class="w-full bg-[#050505] border border-zinc-800 p-4 rounded-lg mono text-xs focus:border-cyan-500 outline-none transition-all">
-                            <input type="email" name="email" required placeholder="EMAIL"
-                                class="w-full bg-[#050505] border border-zinc-800 p-4 rounded-lg mono text-xs focus:border-cyan-500 outline-none transition-all">
+                        <div class="form-row">
+                            <input type="text" name="name" required placeholder="NAME" class="form-control">
+                            <input type="email" name="email" required placeholder="EMAIL" class="form-control">
                         </div>
-                        <input type="text" name="_subject" required placeholder="SUBJECT"
-                            class="w-full bg-[#050505] border border-zinc-800 p-4 rounded-lg mono text-xs focus:border-cyan-500 outline-none transition-all">
+                        <input type="text" name="_subject" required placeholder="SUBJECT" class="form-control">
                         <textarea name="message" required placeholder="MESSAGE" rows="4"
-                            class="w-full bg-[#050505] border border-zinc-800 p-4 rounded-lg mono text-xs focus:border-cyan-500 outline-none transition-all"></textarea>
+                            class="form-control"></textarea>
 
-                        <button type="submit" id="submit-btn"
-                            class="group w-full bg-cyan-500 text-black py-4 rounded-lg font-bold uppercase tracking-widest text-xs hover:bg-white transition-all flex items-center justify-center space-x-2">
+                        <button type="submit" id="submit-btn" class="btn-submit">
                             <span id="btn-text">Execute Transfer</span>
-                            <i
-                                class="fa-solid fa-arrow-right text-[10px] transition-transform group-hover:translate-x-1"></i>
+                            <i class="fa-solid fa-arrow-right btn-arrow"></i>
                         </button>
-                        <div id="form-status" class="text-[10px] uppercase mono text-center mt-2 p-3 rounded hidden">
-                        </div>
+                        <div id="form-status" class="form-status" hidden></div>
                     </form>
                 </div>
             </div>
@@ -388,15 +361,13 @@
     </section>
 
     <!-- Footer -->
-    <footer class="py-12 border-t border-[#1a1a1a] text-center">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-            <p class="mono text-[10px] text-zinc-700 uppercase tracking-widest">&copy; <span id="year"></span> Sabbir
-                Hossain Rajib • Senior Backend Engineer</p>
-            <div class="flex space-x-8 mono text-[10px] text-zinc-500 uppercase tracking-widest">
-                <a href="https://github.com/SabbirHR" target="_blank"
-                    class="hover:text-white transition-colors">GitHub</a>
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p class="footer-copy">&copy; <span id="year"></span> Sabbir Hossain Rajib • Senior Backend Engineer</p>
+            <div class="footer-links">
+                <a href="https://github.com/SabbirHR" target="_blank" rel="noopener">GitHub</a>
                 <a href="https://www.linkedin.com/in/md-sabbir-hossain-rajib-78b735221" target="_blank"
-                    class="hover:text-white transition-colors">LinkedIn</a>
+                    rel="noopener">LinkedIn</a>
             </div>
         </div>
     </footer>
@@ -414,9 +385,10 @@
 
             // Loading state
             submitBtn.disabled = true;
-            if (btnText) btnText.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin mr-1"></i> SENDING...';
-            status.className = 'text-[10px] uppercase mono text-center mt-2 p-3 rounded text-cyan-400 block';
-            status.innerHTML = '<span class="animate-pulse">TRANSMITTING TO NEURAL LINK...</span>';
+            if (btnText) btnText.innerHTML = '<i class="fa-solid fa-circle-notch spin spinner-icon"></i> SENDING...';
+            status.className = 'form-status is-loading';
+            status.hidden = false;
+            status.innerHTML = '<span class="pulse">TRANSMITTING TO NEURAL LINK...</span>';
 
             const formData = new FormData(form);
 
@@ -432,15 +404,16 @@
                     if (data.success === "true" || data.success === true) {
                         // FormSubmit may require email verification the first time!
                         status.innerHTML = '&#10003; EMAIL DELIVERED. (Note: Check inbox/spam to verify activation if first time!)';
-                        status.className = 'text-[10px] uppercase mono text-center mt-2 p-3 rounded text-green-400 block bg-green-500/10 border border-green-500/20';
+                        status.className = 'form-status is-success';
                         form.reset();
                         if (btnText) btnText.innerHTML = '&#10003; TRANSFER COMPLETE';
-                        submitBtn.classList.replace('bg-cyan-500', 'bg-green-500');
+                        submitBtn.classList.add('is-success');
                         setTimeout(function () {
                             submitBtn.disabled = false;
                             if (btnText) btnText.innerHTML = 'Execute Transfer';
-                            submitBtn.classList.replace('bg-green-500', 'bg-cyan-500');
-                            status.className = 'hidden';
+                            submitBtn.classList.remove('is-success');
+                            status.className = 'form-status';
+                            status.hidden = true;
                         }, 8000);
                     } else {
                         throw new Error(data.message || "Transmission failed");
@@ -449,7 +422,8 @@
                 .catch(error => {
                     console.error('FormSubmit Error:', error);
                     status.innerHTML = 'ERROR: ' + error.message;
-                    status.className = 'text-[10px] uppercase mono text-center mt-2 p-3 rounded text-red-400 block bg-red-500/10 border border-red-500/20';
+                    status.className = 'form-status is-error';
+                    status.hidden = false;
                     submitBtn.disabled = false;
                     if (btnText) btnText.innerHTML = 'RETRY TRANSFER';
                 });
