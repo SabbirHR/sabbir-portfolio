@@ -14,15 +14,17 @@
     <!-- Header -->
     <header class="site-header">
         <div class="container header-inner">
-            <a href="#about" class="brand" aria-label="Sabbir Hossain Rajib — home">
+            <a href="#home" class="brand" aria-label="Sabbir Hossain Rajib — home">
                 <div class="brand-mark">S</div>
                 <span class="brand-name">Sabbir<span class="brand-dot">.</span></span>
             </a>
             <nav class="main-nav" aria-label="Primary">
+                <span class="nav-current" aria-hidden="true"></span>
                 <a href="#about" class="nav-link">About</a>
-                <a href="#work" class="nav-link">Projects</a>
+                <a href="#services" class="nav-link">Services</a>
                 <a href="#stack" class="nav-link">Stack</a>
                 <a href="#experience" class="nav-link">Experience</a>
+                <a href="#work" class="nav-link">Projects</a>
                 <a href="#contact" class="nav-link">Contact</a>
             </nav>
             <div class="header-actions">
@@ -31,12 +33,25 @@
                 <a href="https://www.linkedin.com/in/md-sabbir-hossain-rajib-78b735221" target="_blank" rel="noopener"
                     class="social-link" aria-label="LinkedIn profile"><i class="fa-brands fa-linkedin"></i></a>
                 <a href="mailto:sabbirhossainrajib.office@gmail.com" class="btn-hire">Hire Me</a>
+                <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="mobile-nav"
+                    aria-label="Toggle navigation menu">
+                    <i class="fa-solid fa-bars" id="nav-toggle-icon"></i>
+                </button>
             </div>
         </div>
+        <!-- Mobile nav panel -->
+        <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile">
+            <a href="#about" class="nav-link">About</a>
+            <a href="#services" class="nav-link">Services</a>
+            <a href="#stack" class="nav-link">Stack</a>
+            <a href="#experience" class="nav-link">Experience</a>
+            <a href="#work" class="nav-link">Projects</a>
+            <a href="#contact" class="nav-link">Contact</a>
+        </nav>
     </header>
 
     <!-- Hero Section -->
-    <section id="about" class="hero">
+    <section id="home" class="hero">
         <div class="blueprint-bg"></div>
         <div class="hero-gradient"></div>
 
@@ -64,31 +79,109 @@
                 </div>
             </div>
 
-            <!-- Code Block Visual -->
-            <div class="hero-visual">
-                <div class="hero-visual-glow"></div>
-                <div class="glass-card code-window">
-                    <div class="code-body">
-                        <div class="code-dots">
-                            <div class="code-dot dot-red"></div>
-                            <div class="code-dot dot-yellow"></div>
-                            <div class="code-dot dot-green"></div>
+            <!-- Right column reserved for the Three.js hero scene (decorative, canvas is fixed behind) -->
+            <div class="hero-visual" aria-hidden="true"></div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section">
+        <div class="container">
+            <div class="about-grid">
+                <div>
+                    <div class="section-tag">About</div>
+                    <h2 class="section-title">The Engineer Behind the Logic</h2>
+                    <!-- TODO(Sabbir): real bio text — replace this placeholder with a real personal/about biography. No source data was available, so nothing was invented here. -->
+                    <p class="about-lead">
+                        <!-- TODO(Sabbir): real bio text -->
+                        A short, real biography belongs here — background, working style, and what drives the work.
+                        This placeholder exists only because no bio copy was available to reuse.
+                    </p>
+                    <p class="about-note">// TODO(Sabbir): real bio text</p>
+                </div>
+
+                <!-- Code Block Visual (Engineering Philosophy — real content) -->
+                <div class="hero-visual about-visual">
+                    <div class="glass-card code-window">
+                        <div class="code-body">
+                            <div class="code-dots">
+                                <div class="code-dot dot-red"></div>
+                                <div class="code-dot dot-yellow"></div>
+                                <div class="code-dot dot-green"></div>
+                            </div>
+                            <p class="code-comment">// Engineering Philosophy</p>
+                            <p><span class="tok-keyword">class</span> <span class="tok-class">BackendArchitect</span> {</p>
+                            <p class="indent-1"><span class="tok-keyword">public</span> <span
+                                    class="tok-func">function</span> <span class="tok-call">deployProduction</span>() {</p>
+                            <p class="indent-2"><span class="tok-keyword">return</span> [</p>
+                            <p class="indent-3"><span class="tok-string">'framework'</span> => <span
+                                    class="tok-string">'Laravel'</span>,</p>
+                            <p class="indent-3"><span class="tok-string">'paradigm'</span> => <span
+                                    class="tok-string">'OOP &amp; MVC'</span>,</p>
+                            <p class="indent-3"><span class="tok-string">'infrastructure'</span> => <span
+                                    class="tok-string">'Nginx / Linux'</span></p>
+                            <p class="indent-2">];</p>
+                            <p class="indent-1">}</p>
+                            <p>}</p>
                         </div>
-                        <p class="code-comment">// Engineering Philosophy</p>
-                        <p><span class="tok-keyword">class</span> <span class="tok-class">BackendArchitect</span> {</p>
-                        <p class="indent-1"><span class="tok-keyword">public</span> <span
-                                class="tok-func">function</span> <span class="tok-call">deployProduction</span>() {</p>
-                        <p class="indent-2"><span class="tok-keyword">return</span> [</p>
-                        <p class="indent-3"><span class="tok-string">'framework'</span> => <span
-                                class="tok-string">'Laravel'</span>,</p>
-                        <p class="indent-3"><span class="tok-string">'paradigm'</span> => <span
-                                class="tok-string">'OOP &amp; MVC'</span>,</p>
-                        <p class="indent-3"><span class="tok-string">'infrastructure'</span> => <span
-                                class="tok-string">'Nginx / Linux'</span></p>
-                        <p class="indent-2">];</p>
-                        <p class="indent-1">}</p>
-                        <p>}</p>
                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <!-- TODO(Sabbir): service descriptions are generic placeholders — no source data existed for specific offerings, SLAs, or pricing. Edit freely. -->
+    <section id="services" class="section section-bordered">
+        <div class="container">
+            <div class="section-head">
+                <div class="section-tag">Services</div>
+                <h2 class="section-title">What I Build</h2>
+            </div>
+
+            <div class="services-grid">
+                <div class="service-card glass-card">
+                    <div class="service-icon"><i class="fa-brands fa-laravel"></i></div>
+                    <h3 class="service-title">Laravel Development</h3>
+                    <p class="service-desc">Robust web applications built on Laravel with clean MVC architecture and
+                        SOLID principles.</p>
+                    <!-- TODO(Sabbir): real service details -->
+                    <span class="service-todo">// TODO: details</span>
+                </div>
+
+                <div class="service-card glass-card">
+                    <div class="service-icon"><i class="fa-solid fa-plug"></i></div>
+                    <h3 class="service-title">API Development</h3>
+                    <p class="service-desc">Design and build of scalable RESTful APIs for web and mobile consumers.</p>
+                    <!-- TODO(Sabbir): real service details -->
+                    <span class="service-todo">// TODO: details</span>
+                </div>
+
+                <div class="service-card glass-card">
+                    <div class="service-icon"><i class="fa-solid fa-layer-group"></i></div>
+                    <h3 class="service-title">Full-Stack Development</h3>
+                    <p class="service-desc">End-to-end product delivery from database schema through to the deployed
+                        interface.</p>
+                    <!-- TODO(Sabbir): real service details -->
+                    <span class="service-todo">// TODO: details</span>
+                </div>
+
+                <div class="service-card glass-card">
+                    <div class="service-icon"><i class="fa-solid fa-database"></i></div>
+                    <h3 class="service-title">Database Design</h3>
+                    <p class="service-desc">Schema design, query optimization, and tuning across MariaDB, MySQL, and
+                        PostgreSQL.</p>
+                    <!-- TODO(Sabbir): real service details -->
+                    <span class="service-todo">// TODO: details</span>
+                </div>
+
+                <div class="service-card glass-card">
+                    <div class="service-icon"><i class="fa-solid fa-server"></i></div>
+                    <h3 class="service-title">DevOps &amp; Server Setup</h3>
+                    <p class="service-desc">Linux server administration, Nginx configuration, Docker containerization,
+                        and deployment automation.</p>
+                    <!-- TODO(Sabbir): real service details -->
+                    <span class="service-todo">// TODO: details</span>
                 </div>
             </div>
         </div>
@@ -107,7 +200,7 @@
                 <div class="skill-group">
                     <div class="skill-group-head">
                         <i class="fa-solid fa-code"></i>
-                        <h4 class="skill-group-title">Backend &amp; Framework</h4>
+                        <h3 class="skill-group-title">Backend &amp; Framework</h3>
                     </div>
                     <ul class="skill-list">
                         <li class="skill-item"><span class="skill-name">Laravel</span>
@@ -128,7 +221,7 @@
                 <div class="skill-group">
                     <div class="skill-group-head">
                         <i class="fa-solid fa-database"></i>
-                        <h4 class="skill-group-title">Database &amp; Systems</h4>
+                        <h3 class="skill-group-title">Database &amp; Systems</h3>
                     </div>
                     <ul class="skill-list">
                         <li class="skill-item"><span class="skill-name">MariaDB / MySQL</span>
@@ -148,7 +241,7 @@
                 <div class="skill-group">
                     <div class="skill-group-head">
                         <i class="fa-solid fa-server"></i>
-                        <h4 class="skill-group-title">DevOps &amp; Infra</h4>
+                        <h3 class="skill-group-title">DevOps &amp; Infra</h3>
                     </div>
                     <ul class="skill-list">
                         <li class="skill-item"><span class="skill-name">Linux Server Admin</span>
@@ -168,7 +261,7 @@
                 <div class="skill-group">
                     <div class="skill-group-head">
                         <i class="fa-solid fa-toolbox"></i>
-                        <h4 class="skill-group-title">Tools &amp; Workflow</h4>
+                        <h3 class="skill-group-title">Tools &amp; Workflow</h3>
                     </div>
                     <ul class="skill-list">
                         <li class="skill-item"><span class="skill-name">Git / GitHub</span> <span

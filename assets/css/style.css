@@ -196,6 +196,37 @@ svg {
     color: var(--text);
 }
 
+.nav-link {
+    position: relative;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    transition: color 0.3s;
+}
+
+.nav-link:hover {
+    color: white;
+}
+
+.nav-link.active {
+    color: white;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--accent);
+    transition: width 0.3s;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+    width: 100%;
+}
+
 /* ==========================================================================
    Buttons
    ========================================================================== */
@@ -214,6 +245,65 @@ svg {
 .btn-hire:hover {
     background-color: var(--accent);
     color: #000000;
+}
+
+/* Hamburger toggle (mobile only) */
+.nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    line-height: 1;
+}
+
+/* Mobile nav panel */
+.mobile-nav {
+    display: none;
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    right: 0;
+    z-index: 40;
+    background-color: rgba(3, 3, 3, 0.97);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem;
+    flex-direction: column;
+    gap: 0.25rem;
+    transform: translateY(-0.5rem);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.mobile-nav.is-open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.mobile-nav .nav-link {
+    display: block;
+    padding: 0.75rem 0.5rem;
+    font-size: 1rem;
+}
+
+.mobile-nav .nav-link::after {
+    display: none;
+}
+
+/* Current-section indicator (in header, desktop) */
+.nav-current {
+    font-family: 'Fira Code', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--text-fainter);
+    margin-right: 0.5rem;
 }
 
 /* ==========================================================================
@@ -867,6 +957,103 @@ textarea.form-control {
 }
 
 /* ==========================================================================
+   About
+   ========================================================================== */
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: start;
+}
+
+.about-lead {
+    color: var(--text-light);
+    font-size: 1.125rem;
+    line-height: 1.625;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    max-width: 36rem;
+}
+
+.about-bio {
+    color: var(--text-faint);
+    line-height: 1.625;
+    margin-bottom: 2rem;
+    max-width: 36rem;
+}
+
+.about-note {
+    font-size: 0.75rem;
+    color: var(--text-fainter);
+    font-family: 'Fira Code', monospace;
+}
+
+.about-visual {
+    display: block;
+    position: relative;
+}
+
+/* ==========================================================================
+   Services
+   ========================================================================== */
+.services-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+.service-card {
+    padding: 2rem;
+    border-radius: var(--radius-xl);
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.service-icon {
+    width: 3rem;
+    height: 3rem;
+    background-color: var(--icon-bg);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+    transition: background-color 0.3s ease;
+}
+
+.service-icon i {
+    font-size: 1.125rem;
+    color: var(--accent);
+    transition: color 0.3s ease;
+}
+
+.service-card:hover .service-icon {
+    background-color: var(--accent-soft);
+}
+
+.service-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.025em;
+}
+
+.service-desc {
+    color: var(--text-faint);
+    font-size: 0.875rem;
+    line-height: 1.625;
+}
+
+.service-todo {
+    display: inline-block;
+    margin-top: 0.75rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-fainter);
+}
+
+/* ==========================================================================
    Footer
    ========================================================================== */
 .site-footer {
@@ -933,6 +1120,20 @@ textarea.form-control {
 /* ==========================================================================
    Responsive
    ========================================================================== */
+@media (max-width: 767px) {
+    .nav-toggle {
+        display: block;
+    }
+
+    .mobile-nav {
+        display: flex;
+    }
+
+    .nav-current {
+        display: none;
+    }
+}
+
 @media (min-width: 640px) {
     .brand-name {
         display: block;
@@ -944,6 +1145,10 @@ textarea.form-control {
 
     .form-row {
         grid-template-columns: 1fr 1fr;
+    }
+
+    .services-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -987,6 +1192,16 @@ textarea.form-control {
 
     .hero-visual {
         display: block;
+    }
+
+    .about-grid {
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 4rem;
+        align-items: center;
+    }
+
+    .services-grid {
+        grid-template-columns: repeat(3, 1fr);
     }
 
     .skills-grid {

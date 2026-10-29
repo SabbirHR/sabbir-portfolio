@@ -1,8 +1,88 @@
 /**
- * main.js — Core site behaviour: footer year, contact form (FormSubmit.co AJAX).
+ * main.js — Core site behaviour: footer year, contact form (FormSubmit.co AJAX),
+ * mobile navigation, and scroll-based nav highlighting.
  * Progressive enhancement: the form's native POST action still works if JS fails.
  */
 document.getElementById('year').textContent = new Date().getFullYear();
+
+/* --------------------------------------------------------------------------
+ * Mobile navigation (hamburger)
+ * -------------------------------------------------------------------------- */
+(function initMobileNav() {
+    const toggle = document.getElementById('nav-toggle');
+    const panel = document.getElementById('mobile-nav');
+    const icon = document.getElementById('nav-toggle-icon');
+    if (!toggle || !panel) return;
+
+    const setOpen = (open) => {
+        panel.classList.toggle('is-open', open);
+        toggle.setAttribute('aria-expanded', String(open));
+        if (icon) icon.className = open ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+    };
+
+    toggle.addEventListener('click', () => {
+        setOpen(!panel.classList.contains('is-open'));
+    });
+
+    // Close when a nav link is clicked
+    panel.querySelectorAll('a[href^="#"]').forEach((link) => {
+        link.addEventListener('click', () => setOpen(false));
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && panel.classList.contains('is-open')) {
+            setOpen(false);
+            toggle.focus();
+        }
+    });
+
+    // Close if the viewport grows to desktop width
+    const mq = window.matchMedia('(min-width: 768px)');
+    mq.addEventListener('change', (e) => {
+        if (e.matches) setOpen(false);
+    });
+})();
+
+/* --------------------------------------------------------------------------
+ * Active-link highlighting + current-section indicator
+ * -------------------------------------------------------------------------- */
+(function initNavHighlight() {
+    const sections = Array.from(document.querySelectorAll('section[id]'));
+    const navLinks = Array.from(document.querySelectorAll('.nav-link'));
+    const indicator = document.querySelector('.nav-current');
+    if (!sections.length || !navLinks.length) return;
+
+    const linkById = new Map();
+    navLinks.forEach((link) => {
+        const id = link.getAttribute('href').slice(1);
+        if (!linkById.has(id)) linkById.set(id, []);
+        linkById.get(id).push(link);
+    });
+
+    const setActive = (id) => {
+        navLinks.forEach((l) => l.classList.remove('active'));
+        const links = linkById.get(id);
+        if (links) links.forEach((l) => l.classList.add('active'));
+        if (indicator) {
+            const active = links && links[0];
+            indicator.textContent = active ? active.textContent.trim() : '';
+        }
+    };
+
+    const observer = new IntersectionObserver(
+        (entries) => {
+            // Pick the most visible intersecting section
+            const visible = entries
+                .filter((e) => e.isIntersecting)
+                .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+            if (visible.length) setActive(visible[0].target.id);
+        },
+        { rootMargin: '-40% 0px -55% 0px', threshold: [0, 0.25, 0.5, 1] }
+    );
+
+    sections.forEach((s) => observer.observe(s));
+})();
 
 const form = document.getElementById('contact-form');
 const status = document.getElementById('form-status');
