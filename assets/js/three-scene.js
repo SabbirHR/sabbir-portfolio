@@ -294,11 +294,37 @@ class PortfolioScene {
     }
 
     /* ------------------------------------------------------------------
-     * Station 3 — Projects glass-panel frames (populated in a later task).
+     * Station 3 — Projects: 3 floating glass-panel frames as an ambient
+     * backdrop. The primary card interaction is the CSS 3D tilt in main.js.
      * ------------------------------------------------------------------ */
     buildProjectsStation() {
-        // TODO(task 7): floating glass-panel frames
-        return new THREE.Group();
+        const group = new THREE.Group();
+        const frameCount = this.mobile ? 2 : 3;
+        const xs = [-3.4, 0, 3.4];
+        for (let i = 0; i < frameCount; i++) {
+            const frame = this.createGlassFrame(2.6, 3.4);
+            frame.position.set(xs[i], (Math.random() - 0.5) * 0.6, -0.5 + Math.random());
+            frame.userData.baseY = frame.position.y;
+            frame.userData.bobOffset = Math.random() * Math.PI * 2;
+            group.add(frame);
+        }
+        return group;
+    }
+
+    /** A glass-panel frame: translucent face + glowing border edges. */
+    createGlassFrame(width, height) {
+        const frame = new THREE.Group();
+        const geo = new THREE.PlaneGeometry(width, height);
+        const face = new THREE.Mesh(
+            geo,
+            new THREE.MeshBasicMaterial({ color: 0x0a1418, transparent: true, opacity: 0.18 })
+        );
+        const border = new THREE.LineSegments(
+            new THREE.EdgesGeometry(geo),
+            new THREE.LineBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.55 })
+        );
+        frame.add(face, border);
+        return frame;
     }
 
     /* ------------------------------------------------------------------

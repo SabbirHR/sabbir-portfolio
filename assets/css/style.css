@@ -729,6 +729,7 @@ svg {
     display: grid;
     grid-template-columns: 1fr;
     gap: 1.5rem;
+    perspective: 1000px;
 }
 
 .project-card {
@@ -737,6 +738,9 @@ svg {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    transform-style: preserve-3d;
+    will-change: transform;
+    transition: transform 0.2s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .project-icon {
