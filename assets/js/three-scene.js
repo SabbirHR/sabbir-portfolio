@@ -228,11 +228,69 @@ class PortfolioScene {
     }
 
     /* ------------------------------------------------------------------
-     * Station 2 — Skills constellation (populated in a later task).
+     * Station 2 — Skills constellation: 4 hub nodes (skill groups) + 18 leaf
+     * nodes (the 5/5/5/3 skills), hub→leaf edges, flying into place on enter.
+     * DOM skill lists remain the accessible source of truth (canvas is
+     * aria-hidden and purely decorative).
      * ------------------------------------------------------------------ */
     buildSkillsStation() {
-        // TODO(task 6): hub + leaf constellation
-        return new THREE.Group();
+        const group = new THREE.Group();
+        const leavesPerHub = [5, 5, 5, 3]; // matches the four skill groups
+        const leafNodes = [];
+
+        // Hub positions spread horizontally
+        const hubXs = [-4.5, -1.5, 1.5, 4.5];
+        leavesPerHub.forEach((leafCount, hi) => {
+            const hubPos = new THREE.Vector3(hubXs[hi], 0, 0);
+            const hub = this.createGlowNode(0.28);
+            hub.position.copy(hubPos);
+            group.add(hub);
+
+            const segs = [];
+            for (let li = 0; li < leafCount; li++) {
+                const angle = (li / leafCount) * Math.PI * 2;
+                const radius = 1.1 + Math.random() * 0.4;
+                const target = new THREE.Vector3(
+                    hubPos.x + Math.cos(angle) * radius,
+                    hubPos.y + Math.sin(angle) * radius * 0.8,
+                    (Math.random() - 0.5) * 1.2
+                );
+                const leaf = this.createGlowNode(0.11);
+                leaf.position.copy(target);
+                leaf.userData.target = target.clone();
+                // Scattered start position for the fly-in
+                leaf.userData.start = new THREE.Vector3(
+                    target.x + (Math.random() - 0.5) * 8,
+                    target.y + (Math.random() - 0.5) * 8,
+                    -6 + Math.random() * 4
+                );
+                leaf.position.copy(leaf.userData.start);
+                leafNodes.push(leaf);
+                group.add(leaf);
+                segs.push(hubPos.x, hubPos.y, hubPos.z, target.x, target.y, target.z);
+            }
+
+            const lineGeo = new THREE.BufferGeometry();
+            lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(segs, 3));
+            group.add(
+                new THREE.LineSegments(
+                    lineGeo,
+                    new THREE.LineBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.28 })
+                )
+            );
+        });
+
+        group.userData.leafNodes = leafNodes;
+        group.userData.fly = { active: false, t: 0 };
+        return group;
+    }
+
+    /** Small glowing icosahedron node. */
+    createGlowNode(radius) {
+        return new THREE.Mesh(
+            new THREE.IcosahedronGeometry(radius, 0),
+            new THREE.MeshBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.9 })
+        );
     }
 
     /* ------------------------------------------------------------------
@@ -286,6 +344,7 @@ class PortfolioScene {
             const dist = Math.abs(center - vh / 2);
             const fade = clamp(1 - dist / (vh * 0.9), 0, 1);
             group.visible = fade > 0.02;
+            if (group.userData.fly && fade > 0.02) group.userData.fly.active = true;
             this.setGroupOpacity(group, fade);
             const s = 0.85 + fade * 0.15;
             group.scale.setScalar(s);
@@ -327,6 +386,8 @@ class PortfolioScene {
         if (!this.running) return;
         this.rafId = requestAnimationFrame(this.tick);
         const t = this.clock.getElapsedTime();
+        const dt = Math.min(t - (this._lastT || t), 0.05);
+        this._lastT = t;
 
         // Lerp mouse for smooth parallax
         this.mouse.lerp(this.mouseTarget, 0.05);
@@ -345,6 +406,32 @@ class PortfolioScene {
                     child.position.y =
                         child.userData.baseY + Math.sin(t * 0.6 + child.userData.bobOffset) * 0.15;
                     child.rotation.y += (child.userData.spin || 0) * 0.01;
+                }
+            });
+        }
+
+        // Animate skills station fly-in
+        const skills = this.stations.skills;
+        if (skills && skills.visible && skills.userData.fly) {
+            const fly = skills.userData.fly;
+            if (fly.active && fly.t < 1) {
+                fly.t = Math.min(1, fly.t + dt * 0.6);
+                const e = 1 - Math.pow(1 - fly.t, 3); // easeOutCubic
+                skills.userData.leafNodes.forEach((leaf) => {
+                    leaf.position.lerpVectors(leaf.userData.start, leaf.userData.target, e);
+                });
+            }
+            skills.rotation.y = Math.sin(t * 0.15) * 0.08;
+        }
+
+        // Animate projects station
+        const projects = this.stations.projects;
+        if (projects && projects.visible) {
+            projects.rotation.y = Math.sin(t * 0.12) * 0.1;
+            projects.children.forEach((child) => {
+                if (child.userData && child.userData.baseY !== undefined) {
+                    child.position.y =
+                        child.userData.baseY + Math.sin(t * 0.5 + child.userData.bobOffset) * 0.1;
                 }
             });
         }
