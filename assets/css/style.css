@@ -668,45 +668,90 @@ select {
 }
 
 /* --------------------------------------------------------------------------
-   9. Services
+   9. Services — editorial rows (full-width, hairline dividers)
    -------------------------------------------------------------------------- */
 .services-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid var(--hairline);
 }
 
-.service-card {
-    background-color: var(--bg-raised);
-    padding: clamp(1.5rem, 3vw, 2.25rem);
+.service-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+    column-gap: 1.25rem;
+    row-gap: .75rem;
+    align-items: start;
+    padding: clamp(1.75rem, 3vw, 2.5rem) clamp(1rem, 2vw, 1.5rem);
+    margin-inline: calc(-1 * clamp(1rem, 2vw, 1.5rem));
+    border-top: 1px solid var(--hairline);
     transition: background-color .3s ease;
 }
 
-.service-card:hover {
-    background-color: var(--bg-hover);
-    box-shadow: none;
+.service-row::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--accent);
+    opacity: 0;
+    transition: opacity .25s ease;
 }
 
-.service-icon {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    margin-bottom: 1.25rem;
-    font-size: 1.125rem;
+.service-row:hover,
+.service-row:focus-within {
+    background-color: var(--bg-hover);
+}
+
+.service-row:hover::before,
+.service-row:focus-within::before {
+    opacity: 1;
+}
+
+.service-index {
+    grid-column: 1;
+    grid-row: 1;
+    font-family: 'Fira Code', monospace;
+    font-size: var(--t-micro);
+    line-height: 1.4;
+    letter-spacing: .16em;
+    color: var(--ink-4);
+    transition: color .25s ease;
+}
+
+.service-row:hover .service-index,
+.service-row:focus-within .service-index {
     color: var(--accent);
 }
 
+.service-icon {
+    grid-column: 1;
+    grid-row: 2;
+    color: var(--accent);
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
 .service-title {
-    font-size: 1.25rem;
-    font-weight: 500;
+    grid-column: 2;
+    grid-row: 1;
+    font-size: var(--t-sub);
     letter-spacing: -.03em;
-    margin-bottom: .75rem;
+}
+
+.service-body {
+    grid-column: 2;
+    grid-row: 2;
 }
 
 .service-desc {
     color: var(--ink-2);
     font-size: .9375rem;
     line-height: 1.6;
+    max-width: 62ch;
 }
 
 .service-todo {
@@ -1246,10 +1291,6 @@ textarea.form-control {
     .form-row {
         grid-template-columns: 1fr 1fr;
     }
-
-    .services-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
 }
 
 @media (min-width: 768px) {
@@ -1274,6 +1315,33 @@ textarea.form-control {
     .about-grid {
         grid-template-columns: 5fr 7fr;
         align-items: center;
+    }
+
+    /* Services: index | icon | title | description (5/7 split) */
+    .service-row {
+        grid-template-columns: 3.5rem 3rem minmax(0, 5fr) minmax(0, 7fr);
+        column-gap: 2rem;
+        align-items: start;
+    }
+
+    .service-index {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .service-icon {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .service-title {
+        grid-column: 3;
+        grid-row: 1;
+    }
+
+    .service-body {
+        grid-column: 4;
+        grid-row: 1;
     }
 
     .skills-grid {
