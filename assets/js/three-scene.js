@@ -332,7 +332,7 @@ class PortfolioScene {
 
     tick() {
         if (!this.running) return;
-        this.rafId = requestAnimationFrame(this.tick);
+        this.rafId = requestAnimationFrame(this._tick); // bound in constructor
 
         this.uniforms.uTime.value = this.clock.getElapsedTime();
         this.mouse.lerp(this.mouseTarget, 0.05);
