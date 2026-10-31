@@ -86,34 +86,6 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
 })();
 
 /* --------------------------------------------------------------------------
- * Project card 3D tilt — pointer:fine only (no tilt on touch, no click theft)
- * -------------------------------------------------------------------------- */
-(function initTilt() {
-    if (!window.matchMedia('(pointer: fine)').matches) return;
-    if (prefersReducedMotion()) return;
-
-    const cards = document.querySelectorAll('.project-card');
-    const MAX_DEG = 6;
-
-    function prefersReducedMotion() {
-        return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    }
-
-    cards.forEach((card) => {
-        card.addEventListener('mousemove', (e) => {
-            const rect = card.getBoundingClientRect();
-            const px = (e.clientX - rect.left) / rect.width - 0.5;  // -0.5..0.5
-            const py = (e.clientY - rect.top) / rect.height - 0.5;
-            card.style.transform =
-                `rotateY(${(px * MAX_DEG).toFixed(2)}deg) rotateX(${(-py * MAX_DEG).toFixed(2)}deg) translateZ(0)`;
-        });
-        card.addEventListener('mouseleave', () => {
-            card.style.transform = '';
-        });
-    });
-})();
-
-/* --------------------------------------------------------------------------
  * Contact form (FormSubmit.co AJAX) — guarded so a missing form node (or a
  * partial DOM) can never throw and break the rest of main.js.
  * -------------------------------------------------------------------------- */

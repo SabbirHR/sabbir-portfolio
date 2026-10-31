@@ -55,8 +55,11 @@ function initSectionReveals() {
         '.section-tag',
         '.section-title',
         '.skill-group',
-        '.service-card',
-        '.project-card',
+        '.service-row',
+        // Project cards are position:sticky — animate their children only,
+        // never the card or .projects-grid (a transformed ancestor breaks sticky).
+        '.project-index',
+        '.project-main',
         '.timeline-item',
         '.about-grid > div',
         '.contact-info',
