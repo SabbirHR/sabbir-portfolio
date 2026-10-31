@@ -226,6 +226,21 @@ select {
     background-color: var(--accent);
 }
 
+/* Masked line reveal wrappers — written into the DOM by animations.js only
+ * (never as a hidden static state, so no-JS renders everything normally). */
+.w {
+    display: inline-block;
+    overflow: hidden;
+    padding-bottom: .12em;
+    margin-bottom: -.12em;
+}
+
+.w > i {
+    display: inline-block;
+    font-style: normal;
+    will-change: transform;
+}
+
 /* --------------------------------------------------------------------------
    5. Header / navigation
    -------------------------------------------------------------------------- */
