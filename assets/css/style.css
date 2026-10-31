@@ -71,6 +71,13 @@ html {
     -webkit-text-size-adjust: 100%;
 }
 
+/* Lenis active (see assets/js/lenis-init.js): drop the native smooth scroll
+   so GSAP-ticker scrolling and anchor jumps do not fight each other.
+   scroll-padding-top above is untouched and keeps anchor offsets correct. */
+html.lenis-active {
+    scroll-behavior: auto;
+}
+
 body {
     margin: 0;
     background-color: var(--bg);
@@ -1007,7 +1014,6 @@ select {
 }
 
 .project-card {
-    position: relative;
     background-color: var(--bg-raised);
     border-top: 1px solid var(--hairline);
     padding: clamp(1.75rem, 3.5vw, 3rem) clamp(1.5rem, 3vw, 3rem);
@@ -1075,8 +1081,11 @@ select {
     padding: .3rem .55rem;
 }
 
-/* Ghost outline word — built only from an existing project tag */
+/* Ghost outline word — built only from an existing project tag.
+   Decorative chrome of the stacked sheet: desktop-only (hidden below 768px,
+   where cards are plain flow blocks rather than sheets). */
 .project-ghost {
+    display: none;
     position: absolute;
     right: clamp(1rem, 3vw, 3rem);
     bottom: clamp(.75rem, 2vh, 2rem);
@@ -1106,6 +1115,10 @@ select {
         position: sticky;
         top: calc(var(--header-height) + 1.5rem + var(--i, 0) * 1.5rem);
         min-height: 78vh;
+    }
+
+    .project-ghost {
+        display: block;
     }
 }
 
