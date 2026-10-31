@@ -418,17 +418,28 @@ select {
     position: relative;
     z-index: 1;
     min-height: 100vh;
+    min-height: 100svh;
     display: flex;
     align-items: center;
     padding-top: var(--header-height);
     overflow: hidden;
 }
 
-.hero-gradient {
+/* Static hero fill: lime radial (~6%) + grain. Always present under the
+   canvas; when WebGL is unavailable/hidden the right column still reads as
+   an intentional composition instead of an empty box. */
+.hero::before {
+    content: "";
     position: absolute;
     inset: 0;
+    z-index: 0;
     pointer-events: none;
-    background: radial-gradient(circle at 72% 48%, rgba(200, 255, 47, .055), transparent 62%);
+    background-image:
+        radial-gradient(58% 54% at 70% 46%, rgba(200, 255, 47, .06), rgba(200, 255, 47, 0) 70%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23g)' opacity='0.05'/%3E%3C/svg%3E");
+    background-size: auto, 240px 240px;
+    background-repeat: no-repeat, repeat;
+    background-position: center, 0 0;
 }
 
 #bg-canvas {
@@ -455,6 +466,10 @@ select {
 
 .hero-title {
     font-size: var(--t-display);
+    margin-bottom: 1.75rem;
+}
+
+.hero-tag {
     margin-bottom: 1.75rem;
 }
 
@@ -565,34 +580,70 @@ select {
     box-shadow: none;
 }
 
+.code-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .85rem 1.25rem;
+    border-bottom: 1px solid var(--hairline);
+}
+
+.code-file {
+    font-family: 'Fira Code', monospace;
+    font-size: var(--t-micro);
+    letter-spacing: .1em;
+    color: var(--ink-3);
+}
+
 .code-body {
     background-color: var(--bg-raised);
-    padding: 1.5rem;
+    padding: 1.5rem 1.5rem 1.5rem 0;
     font-family: 'Fira Code', monospace;
     font-size: .8125rem;
-    line-height: 1.7;
+    line-height: 1.8;
     counter-reset: code-line;
 }
 
+/* Line-number gutter: a continuous hairline rule down the left edge */
 .code-body p {
+    position: relative;
     white-space: pre-wrap;
     color: var(--ink-2);
+    padding-left: 3.75rem;
+    counter-increment: code-line;
+}
+
+.code-body p::before {
+    content: counter(code-line, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2.75rem;
+    padding-right: .85rem;
+    text-align: right;
+    border-right: 1px solid var(--hairline);
+    color: var(--ink-4);
+    font-size: var(--t-micro);
+    line-height: inherit;
 }
 
 .code-comment {
     color: var(--ink-4);
 }
 
-.indent-1 {
-    padding-left: 1rem;
+/* Indentation stacks on top of the line-number gutter */
+.code-body .indent-1 {
+    padding-left: 4.75rem;
 }
 
-.indent-2 {
-    padding-left: 2rem;
+.code-body .indent-2 {
+    padding-left: 5.75rem;
 }
 
-.indent-3 {
-    padding-left: 3rem;
+.code-body .indent-3 {
+    padding-left: 6.75rem;
 }
 
 /* Syntax highlighting — lime keyword / ink class / ink-2 string / ink-4 comment */

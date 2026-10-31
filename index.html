@@ -79,40 +79,51 @@
     <section id="home" class="hero">
         <!-- WebGL canvas lives inside the hero: absolute, decorative, scrolls away with it -->
         <canvas id="bg-canvas" aria-hidden="true"></canvas>
-        <div class="hero-gradient"></div>
 
-        <div class="container hero-grid">
-            <div>
-                <div class="section-tag hero-tag">Senior Software Engineer</div>
-                <h1 class="hero-title">Building <span class="accent-word">Logic</span> That Ships.</h1>
-                <p class="hero-desc">
-                    Sabbir Hossain Rajib — A results-driven engineer specializing in high-performance backend
-                    architectures, resilient databases, and automated infrastructure.
-                </p>
-                <div class="stats">
-                    <div class="stat-card glass-card">
-                        <div class="stat-value">4+</div>
-                        <div class="stat-label">Years Experience</div>
-                    </div>
-                    <div class="stat-card glass-card">
-                        <div class="stat-value">50+</div>
-                        <div class="stat-label">Modules Deployed</div>
-                    </div>
-                    <div class="stat-card glass-card">
-                        <div class="stat-value">99.9%</div>
-                        <div class="stat-label">System Uptime</div>
-                    </div>
-                </div>
+        <div class="container">
+            <div class="sec-head">
+                <span class="sec-index" aria-hidden="true">01</span>
+                <span class="sec-rule" aria-hidden="true"></span>
             </div>
 
-            <!-- Right column reserved for the Three.js hero scene (decorative, canvas is fixed behind) -->
-            <div class="hero-visual" aria-hidden="true"></div>
+            <div class="hero-grid">
+                <div>
+                    <div class="section-tag hero-tag">Senior Software Engineer</div>
+                    <h1 class="hero-title">Building <span class="accent-word">Logic</span> That Ships.</h1>
+                    <p class="hero-desc">
+                        Sabbir Hossain Rajib — A results-driven engineer specializing in high-performance backend
+                        architectures, resilient databases, and automated infrastructure.
+                    </p>
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-value">4+</div>
+                            <div class="stat-label">Years Experience</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">50+</div>
+                            <div class="stat-label">Modules Deployed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">99.9%</div>
+                            <div class="stat-label">System Uptime</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right column reserved for the Three.js hero scene (canvas sits behind, absolute in .hero) -->
+                <div class="hero-visual" aria-hidden="true"></div>
+            </div>
         </div>
     </section>
 
     <!-- About Section -->
     <section id="about" class="section">
         <div class="container">
+            <div class="sec-head">
+                <span class="sec-index" aria-hidden="true">02</span>
+                <span class="sec-rule" aria-hidden="true"></span>
+            </div>
+
             <div class="about-grid">
                 <div>
                     <div class="section-tag">About</div>
@@ -128,13 +139,11 @@
 
                 <!-- Code Block Visual (Engineering Philosophy — real content) -->
                 <div class="hero-visual about-visual">
-                    <div class="glass-card code-window">
+                    <div class="code-window">
+                        <div class="code-head">
+                            <span class="code-file">philosophy.php</span>
+                        </div>
                         <div class="code-body">
-                            <div class="code-dots">
-                                <div class="code-dot dot-red"></div>
-                                <div class="code-dot dot-yellow"></div>
-                                <div class="code-dot dot-green"></div>
-                            </div>
                             <p class="code-comment">// Engineering Philosophy</p>
                             <p><span class="tok-keyword">class</span> <span class="tok-class">BackendArchitect</span> {</p>
                             <p class="indent-1"><span class="tok-keyword">public</span> <span
@@ -160,6 +169,11 @@
     <!-- TODO(Sabbir): service descriptions are generic placeholders — no source data existed for specific offerings, SLAs, or pricing. Edit freely. -->
     <section id="services" class="section section-bordered">
         <div class="container">
+            <div class="sec-head">
+                <span class="sec-index" aria-hidden="true">03</span>
+                <span class="sec-rule" aria-hidden="true"></span>
+            </div>
+
             <div class="section-head">
                 <div class="section-tag">Services</div>
                 <h2 class="section-title">What I Build</h2>
@@ -216,6 +230,11 @@
     <!-- Technical Expertise -->
     <section id="stack" class="section section-alt">
         <div class="container">
+            <div class="sec-head">
+                <span class="sec-index" aria-hidden="true">04</span>
+                <span class="sec-rule" aria-hidden="true"></span>
+            </div>
+
             <div class="section-head">
                 <div class="section-tag">Arsenal</div>
                 <h2 class="section-title">Technical Expertise</h2>
@@ -305,6 +324,11 @@
     <!-- Experience Timeline -->
     <section id="experience" class="section section-bordered">
         <div class="container">
+            <div class="sec-head">
+                <span class="sec-index" aria-hidden="true">05</span>
+                <span class="sec-rule" aria-hidden="true"></span>
+            </div>
+
             <div class="experience-grid">
                 <div class="experience-aside">
                     <div class="experience-aside-inner">
@@ -345,6 +369,11 @@
     <!-- Projects Grid -->
     <section id="work" class="section section-bordered">
         <div class="container">
+            <div class="sec-head">
+                <span class="sec-index" aria-hidden="true">06</span>
+                <span class="sec-rule" aria-hidden="true"></span>
+            </div>
+
             <div class="section-head">
                 <div class="section-tag">Portfolio</div>
                 <h2 class="section-title">Production Systems</h2>
@@ -411,6 +440,11 @@
     <!-- Contact Section -->
     <section id="contact" class="section section-bordered section-contact">
         <div class="container">
+            <div class="sec-head">
+                <span class="sec-index" aria-hidden="true">07</span>
+                <span class="sec-rule" aria-hidden="true"></span>
+            </div>
+
             <div class="contact-grid">
                 <div>
                     <div class="section-tag">Get In Touch</div>
