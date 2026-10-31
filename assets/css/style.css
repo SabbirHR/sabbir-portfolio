@@ -1312,6 +1312,38 @@ textarea.form-control {
     gap: 1.5rem;
 }
 
+.footer-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.footer-clock {
+    display: flex;
+    align-items: baseline;
+    gap: .75rem;
+    font-family: 'Fira Code', monospace;
+    font-size: var(--t-micro);
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: .16em;
+}
+
+.footer-clock-label {
+    color: var(--ink-4);
+}
+
+#local-time {
+    color: var(--ink-2);
+    letter-spacing: .16em;
+    font-variant-numeric: tabular-nums;
+}
+
+#local-time:empty {
+    display: none;
+}
+
 .footer-copy {
     font-family: 'Fira Code', monospace;
     font-size: var(--t-micro);
@@ -1339,7 +1371,47 @@ textarea.form-control {
 }
 
 /* --------------------------------------------------------------------------
-   15. Animation utilities (JS-enhanced states only; nothing hidden by CSS)
+   15. Film grain — one static SVG noise layer on body::after (no JS drawing)
+       Animated only for fine pointers; disabled under reduced motion; paused
+       via body.is-hidden (toggled on document.hidden in main.js).
+   -------------------------------------------------------------------------- */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: .05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    background-repeat: repeat;
+    background-position: 0 0;
+}
+
+/* ~12fps: 8 discrete jumps across .667s */
+@media (pointer: fine) {
+    body::after {
+        animation: grain-shift .667s steps(8) infinite;
+    }
+}
+
+body.is-hidden::after {
+    animation-play-state: paused;
+}
+
+@keyframes grain-shift {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 120px 96px;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   16. Animation utilities (JS-enhanced states only; nothing hidden by CSS)
    -------------------------------------------------------------------------- */
 .pulse {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -1368,7 +1440,7 @@ textarea.form-control {
 }
 
 /* --------------------------------------------------------------------------
-   16. Responsive
+   17. Responsive
    -------------------------------------------------------------------------- */
 @media (max-width: 767px) {
     .site-header {
@@ -1403,6 +1475,12 @@ textarea.form-control {
     .footer-inner {
         flex-direction: row;
         align-items: center;
+    }
+
+    .footer-meta {
+        flex-direction: row;
+        align-items: center;
+        gap: 2.5rem;
     }
 
     .form-row {
@@ -1493,7 +1571,7 @@ textarea.form-control {
 }
 
 /* --------------------------------------------------------------------------
-   17. Reduced motion — content always visible, motion disabled
+   18. Reduced motion — content always visible, motion disabled
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
 
@@ -1514,5 +1592,10 @@ textarea.form-control {
 
     .marquee-group[aria-hidden="true"] {
         display: none;
+    }
+
+    /* Grain stays visible but never animates */
+    body::after {
+        animation: none !important;
     }
 }

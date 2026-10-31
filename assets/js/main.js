@@ -86,6 +86,66 @@ if (yearEl) yearEl.textContent = new Date().getFullYear();
 })();
 
 /* --------------------------------------------------------------------------
+ * Live footer clock — Dhaka (Asia/Dhaka), 24h, tabular numerals in CSS.
+ * The interval pauses while the tab is hidden; a body class toggled on the
+ * same event pauses the CSS film-grain animation.
+ * -------------------------------------------------------------------------- */
+(function initLocalTime() {
+    const timeEl = document.getElementById('local-time');
+
+    document.addEventListener('visibilitychange', () => {
+        document.body.classList.toggle('is-hidden', document.hidden);
+        if (document.hidden) stopTick();
+        else startTick();
+    });
+
+    let timer = null;
+    let formatter = null;
+
+    try {
+        formatter = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Asia/Dhaka',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+        });
+    } catch (err) {
+        console.warn('Intl.DateTimeFormat unavailable; using local time fallback.', err);
+        formatter = null;
+    }
+
+    function readTime() {
+        const now = new Date();
+        if (!formatter) return now.toTimeString().slice(0, 8);
+        try {
+            return formatter.format(now);
+        } catch (err) {
+            return now.toTimeString().slice(0, 8);
+        }
+    }
+
+    function tick() {
+        if (!timeEl) return;
+        timeEl.textContent = readTime();
+    }
+
+    function startTick() {
+        if (!timeEl || timer !== null) return;
+        tick();
+        timer = window.setInterval(tick, 1000);
+    }
+
+    function stopTick() {
+        if (timer === null) return;
+        window.clearInterval(timer);
+        timer = null;
+    }
+
+    startTick();
+})();
+
+/* --------------------------------------------------------------------------
  * Contact form (FormSubmit.co AJAX) — guarded so a missing form node (or a
  * partial DOM) can never throw and break the rest of main.js.
  * -------------------------------------------------------------------------- */
