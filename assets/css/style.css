@@ -525,6 +525,64 @@ select {
 }
 
 /* --------------------------------------------------------------------------
+   6b. Marquee strip (skills ticker, sits directly after the hero)
+   -------------------------------------------------------------------------- */
+.marquee {
+    position: relative;
+    z-index: 1;
+    background-color: var(--bg);
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    padding-block: 1.1rem;
+    overflow: hidden;
+}
+
+.marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee-scroll 32s linear infinite;
+}
+
+.marquee-group {
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+    padding-right: 1.75rem;
+    flex: none;
+}
+
+.marquee-item {
+    font-family: 'Fira Code', monospace;
+    font-size: var(--t-label);
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: .16em;
+    color: var(--ink-3);
+    white-space: nowrap;
+}
+
+.marquee-sep {
+    width: 5px;
+    height: 5px;
+    flex: none;
+    background-color: var(--accent);
+}
+
+@keyframes marquee-scroll {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+.marquee:hover .marquee-track {
+    animation-play-state: paused;
+}
+
+/* --------------------------------------------------------------------------
    7. Shared card style (hairline panel, sharp corners, 1px focus ring)
    -------------------------------------------------------------------------- */
 .glass-card {
@@ -1446,5 +1504,15 @@ textarea.form-control {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
+    }
+
+    /* Marquee becomes a static, overflow-hidden row */
+    .marquee-track {
+        animation: none !important;
+        transform: none !important;
+    }
+
+    .marquee-group[aria-hidden="true"] {
+        display: none;
     }
 }
