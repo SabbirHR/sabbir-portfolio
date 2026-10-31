@@ -877,7 +877,7 @@ select {
 
 .timeline-dot {
     position: absolute;
-    left: -2.5rem;
+    left: calc(-2.5rem - 3px);
     top: .45rem;
     width: 7px;
     height: 7px;
