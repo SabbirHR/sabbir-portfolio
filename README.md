@@ -59,6 +59,40 @@ python3 -m http.server 8000
 > A local server is required (not `file://`) because the Three.js scene loads as
 > an ES module via an `importmap`, which browsers block on the `file://` protocol.
 
+## QA harness
+
+`tests/` holds a Puppeteer-driven browser smoke harness — the parity gate for
+any animation/engine change. It runs **headed** Chrome on a local X display
+(chrome-headless-shell reports `pointer:none`, which would falsely fail the
+`pointer:fine` gates) against a throwaway `python3 -m http.server`.
+
+```bash
+tests/run-qa.sh          # full run: sections A–H (10 browser jobs)
+QA_PORT=8200 tests/run-qa.sh          # different port
+QA_DISPLAY=:0 CHROME_PATH=/usr/bin/google-chrome tests/run-qa.sh   # env overrides
+```
+
+Requirements: `node` ≥ 18, `google-chrome`, an X display (`QA_DISPLAY`,
+default `:0`), and `puppeteer-core` resolvable — installed normally, pointed
+to by `PUPPETEER_CORE_PATH`, or present in `/tmp/opencode/node_modules`. The
+repo itself stays buildless: no `package.json`, no committed `node_modules`.
+
+Sections (each runs in its own Chrome process; a crash only costs that job):
+
+| Section | What it proves |
+|---------|----------------|
+| A | Reveals, cursor, Lenis, sticky stack, anchors, focus ring @1440 |
+| B | No horizontal scrollbar + sticky/ghost breakpoints at 320/768/1440 |
+| C | Hamburger opens, Escape closes |
+| D | JS disabled: every section, all copy, no hidden text |
+| E | **All cross-origin CDNs + the local animation module aborted**: no text node left hidden by script styles; counters exact |
+| F | **`prefers-reduced-motion`**: everything visible, nothing animating, no hidden text |
+| G | WebGL unavailable: canvas hidden, CSS hero fill, content visible |
+| H | After a full-page scroll: no residual transforms on sticky participants |
+
+Exit code 0 = all checks pass; per-check `PASS`/`FAIL` lines land in
+`$QA_LOG_DIR/qa-all.log` (default `/tmp/opencode/qa-all.log`).
+
 ## Third-party CDNs
 
 - **Google Fonts** (Space Grotesk, Fira Code) — `<link>` in `index.html`
