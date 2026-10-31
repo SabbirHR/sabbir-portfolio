@@ -1,42 +1,62 @@
-/* Fonts are loaded via <link> tags in index.html <head> (no @import here —
-   @import inside the stylesheet blocks the preconnected parallel load). */
-
 /* ==========================================================================
-   Design tokens
+   Neo-Technical Editorial — design system (sabbir-portfolio)
+
+   Fonts: Space Grotesk (display/body) + Fira Code (labels/code only).
+   They are loaded with <link> tags in index.html <head> — never @import
+   here, @import would serialise the font request behind this file.
+
+   Rules of the system:
+   - border-radius: 0 everywhere (no --radius-* tokens exist).
+   - Borders are exactly 1px solid var(--hairline).
+   - No box-shadows except the 1px accent focus/hover ring.
+   - Headings are left-aligned, weight 500, letter-spacing -.04em.
+   - Mono labels are uppercase with .16em letter-spacing.
    ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Design tokens
+   -------------------------------------------------------------------------- */
 :root {
-    --bg: #030303;
-    --bg-alt: #050505;
-    --card-bg: #0a0a0a;
-    --accent: #00f2ff;
-    --accent-dim: rgba(0, 242, 255, 0.1);
-    --accent-soft: rgba(0, 242, 255, 0.05);
-    --accent-border: rgba(6, 182, 212, 0.3);
-    --border: #1a1a1a;
-    --text: #ffffff;
-    --text-light: #d4d4d8;
-    --text-muted: #a1a1aa;
-    --text-dim: #888888;
-    --text-faint: #71717a;
-    --text-fainter: #52525b;
-    --text-faintest: #3f3f46;
-    --line: #27272a;
-    --icon-bg: #18181b;
-    --code-bg: #050505;
-    --success: #4ade80;
-    --error: #f87171;
-    --max-width: 80rem;
-    --header-height: 5rem;
-    --radius-sm: 0.125rem;
-    --radius: 0.25rem;
-    --radius-md: 0.5rem;
-    --radius-lg: 0.75rem;
-    --radius-xl: 1rem;
+    /* Surfaces */
+    --bg: #050505;
+    --bg-raised: #0a0a0b;
+    --bg-hover: #0e0e10;
+
+    /* Ink (text) */
+    --ink: #ededed;
+    --ink-2: rgba(237, 237, 237, .66);
+    --ink-3: rgba(237, 237, 237, .42);
+    --ink-4: rgba(237, 237, 237, .26);
+
+    /* Lines */
+    --hairline: rgba(255, 255, 255, .10);
+    --hairline-2: rgba(255, 255, 255, .18);
+
+    /* Accent */
+    --accent: #c8ff2f;
+    --accent-ink: #050505;
+    --accent-a12: rgba(200, 255, 47, .12);
+    --err: #ff5c5c;
+
+    /* Layout */
+    --max-width: 84rem;
+    --header-height: 4.75rem;
+    --gutter: clamp(1.25rem, 4vw, 3rem);
+    --section-pad: clamp(5rem, 14vh, 9rem);
+
+    /* Type scale */
+    --t-display: clamp(3.25rem, 1.2rem + 7.5vw, 7rem);
+    --t-title: clamp(2.25rem, 1.1rem + 3.8vw, 4.25rem);
+    --t-sub: clamp(1.5rem, 1.1rem + 1.4vw, 2.5rem);
+    --t-lead: clamp(1.125rem, 1rem + .35vw, 1.3125rem);
+    --t-body: 1rem;
+    --t-label: .6875rem;
+    --t-micro: .625rem;
 }
 
-/* ==========================================================================
-   Base / reset
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   2. Reset / base
+   -------------------------------------------------------------------------- */
 *,
 *::before,
 *::after {
@@ -44,16 +64,20 @@
 }
 
 html {
+    overflow-x: hidden;
+    overflow-x: clip;
     scroll-behavior: smooth;
     scroll-padding-top: calc(var(--header-height) + 1rem);
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
     margin: 0;
     background-color: var(--bg);
-    color: var(--text);
-    font-family: 'Space Grotesk', sans-serif;
-    overflow-x: hidden;
+    color: var(--ink);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: var(--t-body);
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
 }
 
@@ -78,219 +102,274 @@ p {
     font-weight: inherit;
 }
 
+h1,
+h2,
+h3 {
+    font-weight: 500;
+    letter-spacing: -.04em;
+    line-height: .96;
+}
+
 img,
 svg {
     display: block;
     max-width: 100%;
 }
 
-/* ==========================================================================
-   Layout helpers
-   ========================================================================== */
+button,
+input,
+textarea,
+select {
+    font: inherit;
+    color: inherit;
+    border-radius: 0;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 3px;
+}
+
+::selection {
+    background-color: var(--accent);
+    color: var(--accent-ink);
+}
+
+/* --------------------------------------------------------------------------
+   3. Layout helpers
+   -------------------------------------------------------------------------- */
 .container {
     width: 100%;
     max-width: var(--max-width);
-    margin: 0 auto;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-}
-
-/* Fixed background blueprint grid (behind the WebGL canvas) */
-.bg-grid {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background-image:
-        linear-gradient(var(--border) 1px, transparent 1px),
-        linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 50px 50px;
-    background-position: center center;
-    opacity: 0.15;
-}
-
-/* WebGL canvas: absolute inside .hero — scrolls away with the hero, sits
-   behind the hero copy (z-index), never receives pointer events. */
-#bg-canvas {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    display: block;
-}
-
-/* All page content sits above the canvas (header keeps its own fixed z-index) */
-.section,
-.site-footer {
-    position: relative;
-    z-index: 1;
+    margin-inline: auto;
+    padding-inline: var(--gutter);
 }
 
 .section {
     position: relative;
-    padding-top: 8rem;
-    padding-bottom: 8rem;
+    z-index: 1;
+    padding-block: var(--section-pad);
 }
 
 .section-bordered {
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--hairline);
 }
 
-/* Sections are transparent so the decorative 3D stations show through */
 .section-alt {
     background-color: transparent;
 }
 
+/* Section number in the left gutter + hairline rule (all 7 sections) */
+.sec-head {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: clamp(2rem, 5vh, 3rem);
+}
+
+.sec-index {
+    font-family: 'Fira Code', monospace;
+    font-size: var(--t-micro);
+    line-height: 1;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+
+.sec-rule {
+    flex: 1;
+    height: 1px;
+    background-color: var(--hairline);
+}
+
 .section-head {
-    text-align: center;
-    margin-bottom: 5rem;
+    text-align: left;
+    margin-bottom: clamp(2.5rem, 6vh, 4.5rem);
 }
 
 .section-title {
-    font-size: 2.25rem;
-    font-weight: 700;
-    letter-spacing: -0.05em;
+    font-size: var(--t-title);
+    margin-top: 1rem;
 }
 
-/* ==========================================================================
-   Header / navigation
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   4. Shared typography
+   -------------------------------------------------------------------------- */
+.mono {
+    font-family: 'Fira Code', monospace;
+}
+
+.text-dim {
+    color: var(--ink-3);
+}
+
+.section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    font-family: 'Fira Code', monospace;
+    font-size: var(--t-label);
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: .16em;
+    color: var(--ink-3);
+    margin-bottom: 1rem;
+}
+
+.section-tag::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    flex: none;
+    background-color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   5. Header / navigation
+   -------------------------------------------------------------------------- */
 .site-header {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 50;
-    border-bottom: 1px solid var(--border);
-    background-color: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    z-index: 60;
+    background-color: rgba(5, 5, 5, .72);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--hairline);
 }
 
 .header-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 1.5rem;
     height: var(--header-height);
 }
 
 .brand {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: .6rem;
 }
 
 .brand-mark {
-    width: 2rem;
-    height: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--text);
-    color: #000000;
-    font-size: 1.25rem;
-    font-weight: 700;
-    border-radius: var(--radius-sm);
+    width: 1.75rem;
+    height: 1.75rem;
+    display: grid;
+    place-items: center;
+    background-color: var(--accent);
+    color: var(--accent-ink);
+    font-size: .9375rem;
+    font-weight: 600;
+    line-height: 1;
 }
 
 .brand-name {
-    font-size: 1.125rem;
-    font-weight: 700;
-    letter-spacing: -0.05em;
-    text-transform: uppercase;
+    font-size: 1.0625rem;
+    font-weight: 500;
+    letter-spacing: -.03em;
 }
 
 .brand-dot {
-    color: var(--text-fainter);
+    color: var(--accent);
 }
 
 .main-nav {
     display: none;
     align-items: center;
-    gap: 2.5rem;
+    gap: 1.75rem;
 }
 
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1.25rem;
 }
 
 .social-link {
-    color: var(--text-faint);
-    transition: color 0.3s;
+    color: var(--ink-3);
+    transition: color .25s;
 }
 
 .social-link i {
-    font-size: 1.25rem;
+    font-size: 1.0625rem;
 }
 
 .social-link:hover {
-    color: var(--text);
+    color: var(--accent);
 }
 
 .nav-link {
     position: relative;
-    font-size: 0.9rem;
-    color: var(--text-dim);
-    transition: color 0.3s;
+    font-family: 'Fira Code', monospace;
+    font-size: 11px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: .16em;
+    color: var(--ink-3);
+    padding-block: .4rem;
+    transition: color .25s;
 }
 
-.nav-link:hover {
-    color: white;
-}
-
+.nav-link:hover,
 .nav-link.active {
-    color: white;
+    color: var(--ink);
 }
 
 .nav-link::after {
-    content: '';
+    content: "";
     position: absolute;
-    bottom: -4px;
     left: 0;
-    width: 0;
+    bottom: 0;
+    width: 100%;
     height: 1px;
-    background: var(--accent);
-    transition: width 0.3s;
+    background-color: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform .35s cubic-bezier(.65, .05, .36, 1);
 }
 
 .nav-link:hover::after,
 .nav-link.active::after {
-    width: 100%;
+    transform: scaleX(1);
 }
 
-/* ==========================================================================
-   Buttons
-   ========================================================================== */
+/* Decorative current-section readout — hidden in the editorial header */
+.nav-current {
+    display: none;
+}
+
 .btn-hire {
-    background-color: var(--accent-soft);
-    color: var(--accent);
-    border: 1px solid var(--accent-border);
-    padding: 0.5rem 1.25rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-    border-radius: var(--radius-md);
+    font-family: 'Fira Code', monospace;
+    font-size: 11px;
+    line-height: 1;
     text-transform: uppercase;
-    transition: all 0.3s;
+    letter-spacing: .16em;
+    padding: .7rem 1.15rem;
+    background-color: transparent;
+    color: var(--ink);
+    border: 1px solid var(--hairline-2);
+    transition: background-color .25s, color .25s, border-color .25s;
 }
 
 .btn-hire:hover {
     background-color: var(--accent);
-    color: #000000;
+    border-color: var(--accent);
+    color: var(--accent-ink);
 }
 
 /* Hamburger toggle (mobile only) */
 .nav-toggle {
     display: none;
     background: none;
-    border: none;
-    color: var(--text);
-    font-size: 1.25rem;
+    border: 0;
+    color: var(--ink);
+    font-size: 1.125rem;
     cursor: pointer;
-    padding: 0.5rem;
+    padding: .5rem;
     line-height: 1;
 }
 
@@ -301,18 +380,18 @@ svg {
     top: var(--header-height);
     left: 0;
     right: 0;
-    z-index: 40;
-    background-color: rgba(3, 3, 3, 0.97);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    padding: 1.5rem;
+    z-index: 55;
+    background-color: rgba(5, 5, 5, .97);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--hairline);
+    padding: 1.25rem var(--gutter) 1.75rem;
     flex-direction: column;
-    gap: 0.25rem;
-    transform: translateY(-0.5rem);
+    gap: 0;
+    transform: translateY(-.5rem);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    transition: opacity .25s ease, transform .25s ease;
 }
 
 .mobile-nav.is-open {
@@ -323,27 +402,18 @@ svg {
 
 .mobile-nav .nav-link {
     display: block;
-    padding: 0.75rem 0.5rem;
-    font-size: 1rem;
+    padding: .9rem 0;
+    font-size: 12px;
+    border-bottom: 1px solid var(--hairline);
 }
 
 .mobile-nav .nav-link::after {
     display: none;
 }
 
-/* Current-section indicator (in header, desktop) */
-.nav-current {
-    font-family: 'Fira Code', monospace;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    color: var(--text-fainter);
-    margin-right: 0.5rem;
-}
-
-/* ==========================================================================
-   Hero
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   6. Hero
+   -------------------------------------------------------------------------- */
 .hero {
     position: relative;
     z-index: 1;
@@ -354,144 +424,163 @@ svg {
     overflow: hidden;
 }
 
-.blueprint-bg {
-    background-image:
-        linear-gradient(var(--border) 1px, transparent 1px),
-        linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 50px 50px;
-    background-position: center center;
-    opacity: 0.15;
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-}
-
-.blueprint-faint {
-    opacity: 0.05;
-}
-
 .hero-gradient {
-    background: radial-gradient(circle at 50% 50%, var(--accent-soft) 0%, transparent 70%);
     position: absolute;
     inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at 72% 48%, rgba(200, 255, 47, .055), transparent 62%);
+}
+
+#bg-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: block;
+}
+
+.hero .container {
+    position: relative;
+    z-index: 2;
 }
 
 .hero-grid {
-    position: relative;
-    z-index: 10;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 3rem;
+    gap: clamp(2.5rem, 6vw, 4rem);
     align-items: center;
 }
 
 .hero-title {
-    font-size: 3.75rem;
-    font-weight: 700;
-    letter-spacing: -0.05em;
-    line-height: 1;
-    margin-bottom: 2rem;
+    font-size: var(--t-display);
+    margin-bottom: 1.75rem;
 }
 
-.cyan-glow {
+.accent-word {
     color: var(--accent);
-    text-shadow: 0 0 10px var(--accent-dim);
 }
 
 .hero-desc {
-    color: var(--text-muted);
-    font-size: 1.125rem;
-    line-height: 1.625;
-    max-width: 32rem;
-    margin-bottom: 2.5rem;
+    color: var(--ink-2);
+    font-size: var(--t-lead);
+    line-height: 1.6;
+    max-width: 46ch;
+    margin-bottom: clamp(2.5rem, 5vh, 3.5rem);
 }
 
-/* Stats cards */
+/* Stats: hairline-separated columns, no card boxes */
 .stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 40rem;
 }
 
 .stat-card {
-    padding: 1.5rem;
-    flex: 1 1 0%;
-    min-width: 140px;
+    border-left: 1px solid var(--hairline);
+    padding: .25rem 1rem 0 1.1rem;
+}
+
+.stat-card:first-child {
+    padding-left: 1.1rem;
 }
 
 .stat-value {
-    font-size: 1.875rem;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
+    font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.75rem);
+    font-weight: 500;
+    letter-spacing: -.03em;
+    line-height: 1;
+    margin-bottom: .6rem;
+    font-variant-numeric: tabular-nums;
 }
 
 .stat-label {
-    font-size: 10px;
+    font-family: 'Fira Code', monospace;
+    font-size: var(--t-micro);
+    line-height: 1.5;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-faint);
+    letter-spacing: .16em;
+    color: var(--ink-4);
 }
 
-/* Code block visual */
 .hero-visual {
     position: relative;
     display: none;
 }
 
-.hero-visual-glow {
-    position: absolute;
-    inset: -1rem;
-    background-color: var(--accent-soft);
-    filter: blur(2rem);
-    border-radius: 9999px;
+/* --------------------------------------------------------------------------
+   7. Shared card style (hairline panel, sharp corners, 1px focus ring)
+   -------------------------------------------------------------------------- */
+.glass-card {
+    background-color: var(--bg-raised);
+    border: 1px solid var(--hairline);
+    transition: border-color .3s ease, box-shadow .3s ease, background-color .3s ease;
+}
+
+.glass-card:hover {
+    border-color: var(--hairline-2);
+    box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   8. About + code window
+   -------------------------------------------------------------------------- */
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(2.5rem, 5vw, 4rem);
+    align-items: start;
+}
+
+.about-lead {
+    color: var(--ink-2);
+    font-size: var(--t-lead);
+    line-height: 1.6;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    max-width: 46ch;
+}
+
+.about-note {
+    font-size: var(--t-micro);
+    letter-spacing: .1em;
+    color: var(--ink-4);
+    font-family: 'Fira Code', monospace;
+}
+
+.about-visual {
+    display: block;
+    position: relative;
 }
 
 .code-window {
-    border-radius: var(--radius-lg);
-    padding: 0.25rem;
-    overflow: hidden;
+    border: 1px solid var(--hairline);
+    background-color: var(--bg-raised);
+    padding: 0;
 }
 
-.code-dots {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.code-dot {
-    width: 0.75rem;
-    height: 0.75rem;
-    border-radius: 9999px;
-}
-
-.dot-red {
-    background-color: rgba(239, 68, 68, 0.5);
-}
-
-.dot-yellow {
-    background-color: rgba(234, 179, 8, 0.5);
-}
-
-.dot-green {
-    background-color: rgba(34, 197, 94, 0.5);
+.code-window:hover {
+    border-color: var(--hairline);
+    box-shadow: none;
 }
 
 .code-body {
-    background-color: var(--code-bg);
+    background-color: var(--bg-raised);
     padding: 1.5rem;
-    border-radius: var(--radius-md);
     font-family: 'Fira Code', monospace;
-    font-size: 0.875rem;
-    line-height: 1.625;
+    font-size: .8125rem;
+    line-height: 1.7;
+    counter-reset: code-line;
 }
 
 .code-body p {
     white-space: pre-wrap;
+    color: var(--ink-2);
 }
 
 .code-comment {
-    color: var(--text-faint);
-    font-style: italic;
+    color: var(--ink-4);
 }
 
 .indent-1 {
@@ -506,138 +595,154 @@ svg {
     padding-left: 3rem;
 }
 
-/* Syntax highlighting */
+/* Syntax highlighting — lime keyword / ink class / ink-2 string / ink-4 comment */
 .tok-keyword {
-    color: #c084fc;
+    color: var(--accent);
 }
 
 .tok-class {
-    color: #22d3ee;
+    color: var(--ink);
 }
 
 .tok-func {
-    color: #facc15;
+    color: var(--ink);
 }
 
 .tok-call {
-    color: #60a5fa;
+    color: var(--ink-2);
 }
 
 .tok-string {
-    color: #4ade80;
+    color: var(--ink-2);
 }
 
-/* ==========================================================================
-   Shared card style
-   ========================================================================== */
-.glass-card {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border);
-    transition: all 0.3s ease;
+/* --------------------------------------------------------------------------
+   9. Services
+   -------------------------------------------------------------------------- */
+.services-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
 }
 
-.glass-card:hover {
-    border-color: var(--accent);
-    box-shadow: 0 0 20px var(--accent-dim);
+.service-card {
+    background-color: var(--bg-raised);
+    padding: clamp(1.5rem, 3vw, 2.25rem);
+    transition: background-color .3s ease;
 }
 
-/* ==========================================================================
-   Typography helpers
-   ========================================================================== */
-.mono {
-    font-family: 'Fira Code', monospace;
+.service-card:hover {
+    background-color: var(--bg-hover);
+    box-shadow: none;
 }
 
-.section-tag {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.3em;
+.service-icon {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 1.25rem;
+    font-size: 1.125rem;
     color: var(--accent);
-    background-color: var(--accent-dim);
-    padding: 4px 12px;
-    border-radius: var(--radius);
+}
+
+.service-title {
+    font-size: 1.25rem;
+    font-weight: 500;
+    letter-spacing: -.03em;
+    margin-bottom: .75rem;
+}
+
+.service-desc {
+    color: var(--ink-2);
+    font-size: .9375rem;
+    line-height: 1.6;
+}
+
+.service-todo {
     display: inline-block;
-    margin-bottom: 1rem;
+    margin-top: .9rem;
+    font-family: 'Fira Code', monospace;
+    font-size: var(--t-micro);
+    text-transform: uppercase;
+    letter-spacing: .16em;
+    color: var(--ink-4);
 }
 
-.hero-tag {
-    margin-bottom: 1.5rem;
-}
-
-.text-dim {
-    color: var(--text-faint);
-}
-
-/* ==========================================================================
-   Skills / stack
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   10. Stack / skills
+   -------------------------------------------------------------------------- */
 .skills-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: clamp(2rem, 4vw, 3rem);
 }
 
 .skill-group {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
 }
 
 .skill-group-head {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    border-bottom: 1px solid var(--line);
-    padding-bottom: 1rem;
+    gap: .75rem;
+    border-bottom: 1px solid var(--hairline);
+    padding-bottom: .9rem;
 }
 
 .skill-group-head i {
-    color: #22d3ee;
+    color: var(--ink-4);
+    font-size: .8125rem;
 }
 
 .skill-group-title {
     font-family: 'Fira Code', monospace;
-    font-size: 0.75rem;
-    color: var(--text-muted);
+    font-size: var(--t-label);
+    color: var(--ink-3);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: .16em;
     font-weight: 400;
+    line-height: 1.3;
 }
 
 .skill-list {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: .85rem;
 }
 
 .skill-item {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    font-size: 0.875rem;
+    align-items: baseline;
+    gap: 1rem;
+    font-size: .9375rem;
 }
 
 .skill-name {
-    color: var(--text-light);
+    color: var(--ink);
 }
 
 .badge {
     font-family: 'Fira Code', monospace;
-    font-size: 9px;
-    color: var(--text-fainter);
+    font-size: var(--t-micro);
+    letter-spacing: .12em;
+    color: var(--ink-4);
+    white-space: nowrap;
 }
 
 .badge-accent {
-    color: #06b6d4;
+    color: var(--accent);
 }
 
-/* ==========================================================================
-   Experience / timeline
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   11. Experience / timeline
+   -------------------------------------------------------------------------- */
 .experience-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 3rem;
+    gap: clamp(2.5rem, 5vw, 4rem);
 }
 
 .experience-aside-inner {
@@ -645,30 +750,29 @@ svg {
 }
 
 .experience-title {
-    font-size: 2.25rem;
-    font-weight: 700;
-    letter-spacing: -0.05em;
-    margin-bottom: 1.5rem;
+    font-size: var(--t-title);
+    margin-top: 1rem;
+    margin-bottom: 1.25rem;
 }
 
 .timeline {
     position: relative;
-    padding-left: 3rem;
+    padding-left: 2.5rem;
 }
 
 .timeline-line {
     position: absolute;
-    left: -20px;
+    left: 0;
     top: 0;
     bottom: 0;
     width: 1px;
-    background-color: var(--border);
+    background-color: var(--hairline);
     transform-origin: top center;
 }
 
 .timeline-item {
     position: relative;
-    margin-bottom: 5rem;
+    margin-bottom: clamp(3rem, 7vh, 5rem);
 }
 
 .timeline-item:last-child {
@@ -677,131 +781,109 @@ svg {
 
 .timeline-dot {
     position: absolute;
-    left: -23px;
-    top: 10px;
+    left: -2.5rem;
+    top: .45rem;
     width: 7px;
     height: 7px;
     background-color: var(--accent);
-    border-radius: 9999px;
-    box-shadow: 0 0 10px var(--accent);
 }
 
 .timeline-dot-muted {
-    background-color: var(--text-faintest);
-    box-shadow: none;
+    background-color: var(--ink-4);
 }
 
 .timeline-date {
     font-family: 'Fira Code', monospace;
-    font-size: 10px;
-    color: #06b6d4;
+    font-size: var(--t-micro);
+    color: var(--accent);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 0.5rem;
+    letter-spacing: .16em;
+    margin-bottom: .75rem;
     display: block;
 }
 
 .timeline-date-muted {
-    color: var(--text-fainter);
+    color: var(--ink-4);
 }
 
 .timeline-company {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
+    font-size: var(--t-sub);
+    margin-bottom: .5rem;
 }
 
 .timeline-role {
-    color: var(--text-light);
+    color: var(--ink-2);
     font-weight: 500;
-    margin-bottom: 1rem;
+    letter-spacing: -.01em;
+    margin-bottom: .9rem;
 }
 
 .timeline-desc {
-    color: var(--text-faint);
-    font-size: 0.875rem;
-    line-height: 1.625;
-    max-width: 36rem;
+    color: var(--ink-3);
+    font-size: .9375rem;
+    line-height: 1.6;
+    max-width: 46ch;
 }
 
-/* ==========================================================================
-   Projects
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   12. Projects
+   -------------------------------------------------------------------------- */
 .projects-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: 1.5rem;
-    perspective: 1000px;
 }
 
 .project-card {
-    padding: 2rem;
-    border-radius: var(--radius-xl);
+    background-color: var(--bg-raised);
+    border: 1px solid var(--hairline);
+    padding: clamp(1.5rem, 3vw, 2.5rem);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    transform-style: preserve-3d;
-    will-change: transform;
-    transition: transform 0.2s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    gap: 2.5rem;
+    transition: border-color .3s ease, box-shadow .3s ease, background-color .3s ease;
 }
 
-.project-icon {
-    width: 3rem;
-    height: 3rem;
-    background-color: var(--icon-bg);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-    transition: background-color 0.3s;
-}
-
-.project-icon i {
-    font-size: 1.25rem;
-    transition: color 0.3s;
-}
-
-.project-card:hover .project-icon {
-    background-color: var(--accent-soft);
-}
-
-.project-card:hover .project-icon i {
-    color: #22d3ee;
+.project-card:hover,
+.project-card:focus-within {
+    border-color: var(--hairline-2);
+    box-shadow: 0 0 0 1px var(--accent);
 }
 
 .project-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-    letter-spacing: -0.025em;
+    font-size: 1.5rem;
+    font-weight: 500;
+    letter-spacing: -.03em;
+    margin-bottom: .9rem;
 }
 
 .project-desc {
-    color: var(--text-faint);
-    font-size: 0.875rem;
-    margin-bottom: 2rem;
-    line-height: 1.625;
+    color: var(--ink-2);
+    font-size: .9375rem;
+    margin-bottom: 0;
+    line-height: 1.6;
+    max-width: 54ch;
 }
 
 .project-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: .5rem;
 }
 
 .tag {
     font-family: 'Fira Code', monospace;
-    font-size: 10px;
-    color: var(--text-muted);
-    border: 1px solid var(--line);
-    padding: 0.25rem 0.5rem;
+    font-size: var(--t-micro);
+    letter-spacing: .12em;
+    color: var(--ink-3);
+    border: 1px solid var(--hairline);
+    padding: .3rem .55rem;
 }
 
-/* ==========================================================================
-   Contact
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   13. Contact
+   -------------------------------------------------------------------------- */
 .section-contact {
     background-color: transparent;
 }
@@ -809,73 +891,63 @@ svg {
 .contact-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 4rem;
-    align-items: center;
+    gap: clamp(3rem, 6vw, 5rem);
+    align-items: start;
 }
 
 .contact-title {
-    font-size: 3rem;
-    font-weight: 700;
-    letter-spacing: -0.05em;
-    margin-bottom: 2rem;
-    line-height: 1.25;
+    font-size: var(--t-title);
+    margin-bottom: 2.5rem;
+    line-height: 1.04;
 }
 
 .contact-info {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
 }
 
 .contact-item {
     display: flex;
-    align-items: center;
-    gap: 1rem;
+    flex-direction: column;
+    gap: .4rem;
+    padding-block: 1.15rem;
+    border-top: 1px solid var(--hairline);
 }
 
-.contact-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.contact-icon i {
-    color: #22d3ee;
+.contact-item:last-child {
+    border-bottom: 1px solid var(--hairline);
 }
 
 .contact-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    color: var(--text-faint);
     font-family: 'Fira Code', monospace;
-    margin-bottom: 0.125rem;
+    font-size: var(--t-micro);
+    text-transform: uppercase;
+    letter-spacing: .16em;
+    color: var(--ink-4);
 }
 
 .contact-value {
-    color: var(--text-light);
-    transition: color 0.3s;
-    word-break: break-all;
+    color: var(--ink);
+    font-size: 1.0625rem;
+    letter-spacing: -.01em;
+    transition: color .25s;
+    word-break: break-word;
 }
 
-a.contact-value:hover {
-    color: #22d3ee;
+.contact-item:hover .contact-value {
+    color: var(--accent);
 }
 
 .contact-form-card {
-    padding: 2.5rem;
-    border-radius: var(--radius-xl);
+    background-color: var(--bg-raised);
+    border: 1px solid var(--hairline);
+    padding: clamp(1.5rem, 4vw, 2.5rem);
     position: relative;
-    overflow: hidden;
 }
 
 .form-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
+    font-size: var(--t-sub);
+    margin-bottom: 1.75rem;
     position: relative;
     z-index: 10;
 }
@@ -896,70 +968,80 @@ a.contact-value:hover {
 
 .form-control {
     width: 100%;
-    background-color: var(--code-bg);
-    border: 1px solid var(--line);
+    background-color: var(--bg);
+    border: 1px solid var(--hairline);
     padding: 1rem;
-    border-radius: var(--radius-md);
+    border-radius: 0;
     font-family: 'Fira Code', monospace;
-    font-size: 0.75rem;
-    color: var(--text);
+    font-size: var(--t-label);
+    letter-spacing: .08em;
+    color: var(--ink);
     outline: none;
-    transition: all 0.3s;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color .25s, box-shadow .25s;
 }
 
 .form-control::placeholder {
-    color: var(--text-fainter);
+    color: var(--ink-4);
     text-transform: uppercase;
+    letter-spacing: .16em;
 }
 
 .form-control:focus {
     border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
 }
 
 textarea.form-control {
     resize: vertical;
+    min-height: 7rem;
 }
 
 .btn-submit {
     width: 100%;
     background-color: var(--accent);
-    color: #000000;
-    padding: 1rem;
-    border: none;
-    border-radius: var(--radius-md);
-    font-family: inherit;
-    font-weight: 700;
+    color: var(--accent-ink);
+    padding: 1.1rem;
+    border: 1px solid var(--accent);
+    border-radius: 0;
+    font-family: 'Fira Code', monospace;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-size: 0.75rem;
+    letter-spacing: .16em;
+    font-size: var(--t-label);
     cursor: pointer;
-    transition: all 0.3s;
+    transition: background-color .25s, color .25s, border-color .25s;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: .6rem;
 }
 
 .btn-submit:hover:not(:disabled) {
-    background-color: var(--text);
+    background-color: var(--ink);
+    border-color: var(--ink);
+    color: var(--accent-ink);
 }
 
 .btn-submit:disabled {
-    opacity: 0.7;
+    opacity: .7;
     cursor: not-allowed;
 }
 
 .btn-submit.is-success {
-    background-color: #22c55e;
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
 }
 
 .btn-arrow {
     font-size: 10px;
-    transition: transform 0.3s;
+    transition: transform .25s;
 }
 
 .spinner-icon {
-    margin-right: 0.25rem;
+    margin-right: .25rem;
 }
 
 .btn-submit:hover:not(:disabled) .btn-arrow {
@@ -967,13 +1049,14 @@ textarea.form-control {
 }
 
 .form-status {
-    font-size: 10px;
+    font-size: var(--t-micro);
     text-transform: uppercase;
+    letter-spacing: .1em;
     font-family: 'Fira Code', monospace;
     text-align: center;
-    margin-top: 0.5rem;
-    padding: 0.75rem;
-    border-radius: var(--radius);
+    margin-top: .25rem;
+    padding: .75rem;
+    border: 1px solid transparent;
 }
 
 .form-status[hidden] {
@@ -982,171 +1065,83 @@ textarea.form-control {
 
 .form-status.is-loading {
     color: var(--accent);
+    background-color: var(--accent-a12);
+    border-color: rgba(200, 255, 47, .28);
 }
 
 .form-status.is-success {
-    color: var(--success);
-    background-color: rgba(34, 197, 94, 0.1);
-    border: 1px solid rgba(34, 197, 94, 0.2);
+    color: var(--accent);
+    background-color: var(--accent-a12);
+    border-color: rgba(200, 255, 47, .28);
 }
 
 .form-status.is-error {
-    color: var(--error);
-    background-color: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: var(--err);
+    background-color: rgba(255, 92, 92, .1);
+    border-color: rgba(255, 92, 92, .28);
 }
 
-/* ==========================================================================
-   About
-   ========================================================================== */
-.about-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 3rem;
-    align-items: start;
-}
-
-.about-lead {
-    color: var(--text-light);
-    font-size: 1.125rem;
-    line-height: 1.625;
-    margin-top: 1.5rem;
-    margin-bottom: 1.5rem;
-    max-width: 36rem;
-}
-
-.about-bio {
-    color: var(--text-faint);
-    line-height: 1.625;
-    margin-bottom: 2rem;
-    max-width: 36rem;
-}
-
-.about-note {
-    font-size: 0.75rem;
-    color: var(--text-fainter);
-    font-family: 'Fira Code', monospace;
-}
-
-.about-visual {
-    display: block;
-    position: relative;
-}
-
-/* ==========================================================================
-   Services
-   ========================================================================== */
-.services-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-}
-
-.service-card {
-    padding: 2rem;
-    border-radius: var(--radius-xl);
-    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.service-icon {
-    width: 3rem;
-    height: 3rem;
-    background-color: var(--icon-bg);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.25rem;
-    transition: background-color 0.3s ease;
-}
-
-.service-icon i {
-    font-size: 1.125rem;
-    color: var(--accent);
-    transition: color 0.3s ease;
-}
-
-.service-card:hover .service-icon {
-    background-color: var(--accent-soft);
-}
-
-.service-title {
-    font-size: 1.125rem;
-    font-weight: 700;
-    margin-bottom: 0.75rem;
-    letter-spacing: -0.025em;
-}
-
-.service-desc {
-    color: var(--text-faint);
-    font-size: 0.875rem;
-    line-height: 1.625;
-}
-
-.service-todo {
-    display: inline-block;
-    margin-top: 0.75rem;
-    font-family: 'Fira Code', monospace;
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-fainter);
-}
-
-/* ==========================================================================
-   Footer
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   14. Footer
+   -------------------------------------------------------------------------- */
 .site-footer {
-    padding-top: 3rem;
-    padding-bottom: 3rem;
-    border-top: 1px solid var(--border);
-    text-align: center;
+    position: relative;
+    z-index: 1;
+    padding-block: clamp(2.5rem, 6vh, 4rem);
+    border-top: 1px solid var(--hairline);
 }
 
 .footer-inner {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     gap: 1.5rem;
 }
 
 .footer-copy {
     font-family: 'Fira Code', monospace;
-    font-size: 10px;
-    color: var(--text-faintest);
+    font-size: var(--t-micro);
+    color: var(--ink-4);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: .16em;
 }
 
 .footer-links {
     display: flex;
     gap: 2rem;
     font-family: 'Fira Code', monospace;
-    font-size: 10px;
-    color: var(--text-faint);
+    font-size: var(--t-micro);
+    color: var(--ink-3);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: .16em;
 }
 
 .footer-links a {
-    transition: color 0.3s;
+    transition: color .25s;
 }
 
 .footer-links a:hover {
-    color: var(--text);
+    color: var(--accent);
 }
 
-/* ==========================================================================
-   Animation utilities (JS-enhanced states only; no content hidden by default)
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   15. Animation utilities (JS-enhanced states only; nothing hidden by CSS)
+   -------------------------------------------------------------------------- */
 .pulse {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
 }
 
 .spin {
@@ -1154,16 +1149,18 @@ textarea.form-control {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
-/* ==========================================================================
-   Responsive
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   16. Responsive
+   -------------------------------------------------------------------------- */
 @media (max-width: 767px) {
     .site-header {
-        backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
     }
 
     .nav-toggle {
@@ -1173,19 +1170,26 @@ textarea.form-control {
     .mobile-nav {
         display: flex;
     }
+}
 
-    .nav-current {
+/* Social icons live in the header only when there is room for them
+   (they remain available in the contact section and footer) */
+@media (max-width: 1023px) {
+    .header-actions .social-link {
+        display: none;
+    }
+}
+
+@media (max-width: 639px) {
+    .brand-name {
         display: none;
     }
 }
 
 @media (min-width: 640px) {
-    .brand-name {
-        display: block;
-    }
-
     .footer-inner {
         flex-direction: row;
+        align-items: center;
     }
 
     .form-row {
@@ -1197,42 +1201,19 @@ textarea.form-control {
     }
 }
 
-@media (max-width: 639px) {
-    .brand-name {
-        display: none;
-    }
-}
-
 @media (min-width: 768px) {
     .main-nav {
         display: flex;
     }
 
-    .section-title {
-        font-size: 3rem;
-    }
-
     .skills-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .projects-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (min-width: 1024px) {
     .hero-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 3rem;
-    }
-
-    .hero-title {
-        font-size: 6rem;
-    }
-
-    .hero-desc {
-        font-size: 1.25rem;
+        grid-template-columns: 7fr 5fr;
     }
 
     .hero-visual {
@@ -1240,13 +1221,8 @@ textarea.form-control {
     }
 
     .about-grid {
-        grid-template-columns: 1.1fr 0.9fr;
-        gap: 4rem;
+        grid-template-columns: 5fr 7fr;
         align-items: center;
-    }
-
-    .services-grid {
-        grid-template-columns: repeat(3, 1fr);
     }
 
     .skills-grid {
@@ -1255,7 +1231,7 @@ textarea.form-control {
 
     .experience-grid {
         grid-template-columns: repeat(12, 1fr);
-        gap: 3rem;
+        gap: clamp(2rem, 4vw, 4rem);
     }
 
     .experience-aside {
@@ -1264,19 +1240,15 @@ textarea.form-control {
 
     .experience-aside-inner {
         position: sticky;
-        top: 8rem;
+        top: calc(var(--header-height) + 3rem);
     }
 
     .experience-main {
         grid-column: span 8 / span 8;
     }
 
-    .projects-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
     .contact-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 6fr 6fr;
     }
 
     .contact-title br {
@@ -1284,8 +1256,11 @@ textarea.form-control {
     }
 }
 
-/* Reduced motion: keep everything visible, disable transitions/animations */
+/* --------------------------------------------------------------------------
+   17. Reduced motion — content always visible, motion disabled
+   -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {

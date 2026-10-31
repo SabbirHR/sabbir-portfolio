@@ -8,7 +8,7 @@
  */
 import * as THREE from 'three';
 
-const ACCENT = 0x00f2ff;
+const ACCENT = 0xc8ff2f;
 
 /** Clamp helper. */
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
@@ -143,7 +143,7 @@ class PortfolioScene {
         return group;
     }
 
-    /** A wireframe "code block": glassy faces + glowing cyan edges. */
+    /** A wireframe "code block": glassy faces + glowing accent edges. */
     createCodeBlock(width, height) {
         const block = new THREE.Group();
         const depth = 0.35;
