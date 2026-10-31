@@ -1410,8 +1410,52 @@ body.is-hidden::after {
     }
 }
 
+
 /* --------------------------------------------------------------------------
-   16. Animation utilities (JS-enhanced states only; nothing hidden by CSS)
+   16. Custom cursor — the native cursor is hidden ONLY through
+       html.has-cursor, which cursor.js adds after successful init.
+   -------------------------------------------------------------------------- */
+html.has-cursor,
+html.has-cursor a,
+html.has-cursor button,
+html.has-cursor * {
+    cursor: none;
+}
+
+html.has-cursor input,
+html.has-cursor textarea,
+html.has-cursor [contenteditable="true"] {
+    cursor: text;
+}
+
+.cursor-dot,
+.cursor-ring {
+    position: fixed;
+    top: 0;
+    left: 0;
+    border-radius: 0;
+    opacity: 0;
+    pointer-events: none;
+    will-change: transform;
+}
+
+.cursor-dot {
+    width: 6px;
+    height: 6px;
+    background-color: var(--accent);
+    z-index: 10001;
+}
+
+.cursor-ring {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--hairline-2);
+    mix-blend-mode: difference;
+    z-index: 10000;
+}
+
+/* --------------------------------------------------------------------------
+   17. Animation utilities (JS-enhanced states only; nothing hidden by CSS)
    -------------------------------------------------------------------------- */
 .pulse {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -1440,7 +1484,7 @@ body.is-hidden::after {
 }
 
 /* --------------------------------------------------------------------------
-   17. Responsive
+   18. Responsive
    -------------------------------------------------------------------------- */
 @media (max-width: 767px) {
     .site-header {
@@ -1571,7 +1615,7 @@ body.is-hidden::after {
 }
 
 /* --------------------------------------------------------------------------
-   18. Reduced motion — content always visible, motion disabled
+   19. Reduced motion — content always visible, motion disabled
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
 
