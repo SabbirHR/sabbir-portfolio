@@ -3,7 +3,8 @@
  * mobile navigation, and scroll-based nav highlighting.
  * Progressive enhancement: the form's native POST action still works if JS fails.
  */
-document.getElementById('year').textContent = new Date().getFullYear();
+const yearEl = document.getElementById('year');
+if (yearEl) yearEl.textContent = new Date().getFullYear();
 
 /* --------------------------------------------------------------------------
  * Mobile navigation (hamburger)
@@ -112,56 +113,65 @@ document.getElementById('year').textContent = new Date().getFullYear();
     });
 })();
 
-const form = document.getElementById('contact-form');
-const status = document.getElementById('form-status');
-const submitBtn = document.getElementById('submit-btn');
-const btnText = document.getElementById('btn-text');
+/* --------------------------------------------------------------------------
+ * Contact form (FormSubmit.co AJAX) — guarded so a missing form node (or a
+ * partial DOM) can never throw and break the rest of main.js.
+ * -------------------------------------------------------------------------- */
+(function initContactForm() {
+    const form = document.getElementById('contact-form');
+    if (!form) return;
 
-form.addEventListener('submit', function (e) {
-    e.preventDefault();
+    const status = document.getElementById('form-status');
+    const submitBtn = document.getElementById('submit-btn');
+    const btnText = document.getElementById('btn-text');
 
-    // Loading state
-    submitBtn.disabled = true;
-    if (btnText) btnText.innerHTML = '<i class="fa-solid fa-circle-notch spin spinner-icon"></i> SENDING...';
-    status.className = 'form-status is-loading';
-    status.hidden = false;
-    status.innerHTML = '<span class="pulse">TRANSMITTING TO NEURAL LINK...</span>';
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!status || !submitBtn) return;
 
-    const formData = new FormData(form);
+        // Loading state
+        submitBtn.disabled = true;
+        if (btnText) btnText.innerHTML = '<i class="fa-solid fa-circle-notch spin spinner-icon"></i> SENDING...';
+        status.className = 'form-status is-loading';
+        status.hidden = false;
+        status.innerHTML = '<span class="pulse">TRANSMITTING TO NEURAL LINK...</span>';
 
-    fetch(form.action, {
-        method: "POST",
-        body: formData,
-        headers: {
-            'Accept': 'application/json'
-        }
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success === "true" || data.success === true) {
-                // FormSubmit may require email verification the first time!
-                status.innerHTML = '&#10003; EMAIL DELIVERED. (Note: Check inbox/spam to verify activation if first time!)';
-                status.className = 'form-status is-success';
-                form.reset();
-                if (btnText) btnText.innerHTML = '&#10003; TRANSFER COMPLETE';
-                submitBtn.classList.add('is-success');
-                setTimeout(function () {
-                    submitBtn.disabled = false;
-                    if (btnText) btnText.innerHTML = 'Execute Transfer';
-                    submitBtn.classList.remove('is-success');
-                    status.className = 'form-status';
-                    status.hidden = true;
-                }, 8000);
-            } else {
-                throw new Error(data.message || "Transmission failed");
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: "POST",
+            body: formData,
+            headers: {
+                'Accept': 'application/json'
             }
         })
-        .catch(error => {
-            console.error('FormSubmit Error:', error);
-            status.innerHTML = 'ERROR: ' + error.message;
-            status.className = 'form-status is-error';
-            status.hidden = false;
-            submitBtn.disabled = false;
-            if (btnText) btnText.innerHTML = 'RETRY TRANSFER';
-        });
-});
+            .then(response => response.json())
+            .then(data => {
+                if (data.success === "true" || data.success === true) {
+                    // FormSubmit may require email verification the first time!
+                    status.innerHTML = '&#10003; EMAIL DELIVERED. (Note: Check inbox/spam to verify activation if first time!)';
+                    status.className = 'form-status is-success';
+                    form.reset();
+                    if (btnText) btnText.innerHTML = '&#10003; TRANSFER COMPLETE';
+                    submitBtn.classList.add('is-success');
+                    setTimeout(function () {
+                        submitBtn.disabled = false;
+                        if (btnText) btnText.innerHTML = 'Execute Transfer';
+                        submitBtn.classList.remove('is-success');
+                        status.className = 'form-status';
+                        status.hidden = true;
+                    }, 8000);
+                } else {
+                    throw new Error(data.message || "Transmission failed");
+                }
+            })
+            .catch(error => {
+                console.error('FormSubmit Error:', error);
+                status.innerHTML = 'ERROR: ' + error.message;
+                status.className = 'form-status is-error';
+                status.hidden = false;
+                submitBtn.disabled = false;
+                if (btnText) btnText.innerHTML = 'RETRY TRANSFER';
+            });
+    });
+})();

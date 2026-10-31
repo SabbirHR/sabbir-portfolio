@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+/* Fonts are loaded via <link> tags in index.html <head> (no @import here —
+   @import inside the stylesheet blocks the preconnected parallel load). */
 
 /* ==========================================================================
    Design tokens
@@ -108,11 +109,12 @@ svg {
     opacity: 0.15;
 }
 
-/* Single fixed Three.js canvas (decorative only) */
+/* WebGL canvas: absolute inside .hero — scrolls away with the hero, sits
+   behind the hero copy (z-index), never receives pointer events. */
 #bg-canvas {
-    position: fixed;
+    position: absolute;
     inset: 0;
-    z-index: 0;
+    z-index: 1;
     width: 100%;
     height: 100%;
     pointer-events: none;

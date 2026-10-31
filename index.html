@@ -7,7 +7,7 @@
     <title>Sabbir Hossain Rajib | Senior Software Engineer</title>
     <meta name="description"
         content="Sabbir Hossain Rajib — Senior Software Engineer specializing in high-performance backend architectures, resilient databases, and automated infrastructure.">
-    <meta name="theme-color" content="#030303">
+    <meta name="theme-color" content="#050505">
     <meta name="author" content="Sabbir Hossain Rajib">
 
     <!-- Open Graph (derived from existing title/hero — no new claims) -->
@@ -27,15 +27,14 @@
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 
+    <!-- Fonts via <link> (not @import) so they load in parallel with preconnects -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
 <body>
-
-    <!-- Decorative background layers: blueprint grid (behind) + Three.js canvas (single fixed renderer) -->
-    <div class="bg-grid" aria-hidden="true"></div>
-    <canvas id="bg-canvas" aria-hidden="true"></canvas>
 
     <!-- Header -->
     <header class="site-header">
@@ -78,6 +77,8 @@
 
     <!-- Hero Section -->
     <section id="home" class="hero">
+        <!-- WebGL canvas lives inside the hero: absolute, decorative, scrolls away with it -->
+        <canvas id="bg-canvas" aria-hidden="true"></canvas>
         <div class="hero-gradient"></div>
 
         <div class="container hero-grid">
