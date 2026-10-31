@@ -1,14 +1,133 @@
 /**
- * three-scene.js — Single fixed WebGL canvas with three decorative "stations"
- * (Hero / Skills / Projects). Purely decorative (aria-hidden); never the sole
- * carrier of information. Degrades gracefully: no WebGL, reduced-motion, or a
- * failed renderer all leave the site as a clean static gradient/grid portfolio.
+ * three-scene.js — "Mercury Sheet".
+ *
+ * ONE displaced plane inside the hero: a slowly churning fbm surface with
+ * analytic normals, a single fresnel term and a dark→lime→bone hue ramp.
+ * The canvas is absolutely positioned inside .hero, so it scrolls away with
+ * the hero and never needs scroll listeners or masks.
+ *
+ * Shell guarantees (kept from the original file):
+ *   - feature-detects WebGL before touching anything,
+ *   - renderer + DPR setup with mobile reductions,
+ *   - visibilitychange pauses the loop,
+ *   - dispose() frees geometry/material/renderer + removes listeners,
+ *   - failed init runs the bootstrap below that hides the canvas.
+ * Extras: webglcontextlost / webglcontextrestored (Android drops contexts on
+ * backgrounding) and a reduced-motion path that renders ONE static frame.
+ *
+ * Noise: inline Ashima Arts / Stefan Gustavson simplex noise (MIT) — no
+ * addons, no post-processing, no render targets.
  *
  * Loaded as <script type="module"> after an importmap pins three@0.169.0.
  */
 import * as THREE from 'three';
 
-const ACCENT = 0xc8ff2f;
+/* Ashima simplex noise — MIT licensed, inlined so we need no addons.
+ * Copyright (c) 2011 Ashima Arts / Stefan Gustavson (webgl-noise). */
+const SIMPLEX_NOISE = /* glsl */ `
+vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec3 permute(vec3 x) { return mod289(((x * 34.0) + 1.0) * x); }
+
+float snoise(vec2 v) {
+    const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+                        -0.577350269189626, 0.024390243902439);
+    vec2 i = floor(v + dot(v, C.yy));
+    vec2 x0 = v - i + dot(i, C.xx);
+    vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+    vec4 x12 = x0.xyxy + C.xxzz;
+    x12.xy -= i1;
+    i = mod289(i);
+    vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
+    vec3 m = max(0.5 - vec3(dot(x0, x0), dot(x12.xy, x12.xy), dot(x12.zw, x12.zw)), 0.0);
+    m = m * m;
+    m = m * m;
+    vec3 x = 2.0 * fract(p * C.www) - 1.0;
+    vec3 h = abs(x) - 0.5;
+    vec3 ox = floor(x + 0.5);
+    vec3 a0 = x - ox;
+    m *= 1.79284291400159 - 0.85373472095314 * (a0 * a0 + h * h);
+    vec3 g;
+    g.x = a0.x * x0.x + h.x * x0.y;
+    g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+    return 130.0 * dot(m, g);
+}
+`;
+
+const VERTEX_SHADER = /* glsl */ `
+uniform float uTime;
+uniform vec2 uMouse;
+uniform float uAmp;
+
+varying vec3 vNormal;
+varying vec3 vViewDir;
+varying float vHeight;
+
+${SIMPLEX_NOISE}
+
+float fbm(vec2 p) {
+    float f = 0.0;
+    f += 0.5333 * snoise(p);
+    f += 0.2667 * snoise(p * 2.02);
+    f += 0.1333 * snoise(p * 4.05);
+    return f;
+}
+
+float displace(vec2 p) {
+    float h = fbm(p * 0.55 + uTime * 0.06) * uAmp;
+    float d = distance(p, uMouse);
+    h += sin(d * 3.4 - uTime * 2.2) * exp(-d * 1.15) * 0.35;
+    return h;
+}
+
+void main() {
+    float h = displace(position.xy);
+    vec3 p = vec3(position.xy, h);
+
+    // Analytic normals via finite difference (no dFdx extension needed)
+    vec2 ex = vec2(0.06, 0.0);
+    vec2 ey = vec2(0.0, 0.06);
+    vec3 px = vec3(position.xy + ex, displace(position.xy + ex));
+    vec3 py = vec3(position.xy + ey, displace(position.xy + ey));
+    vec3 nrm = normalize(cross(px - p, py - p));
+
+    vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+
+    vNormal = normalize(normalMatrix * nrm);
+    vViewDir = normalize(-mvPosition.xyz);
+    vHeight = h;
+}
+`;
+
+const FRAGMENT_SHADER = /* glsl */ `
+uniform float uTime;
+uniform float uDim;
+uniform vec3 uDark;
+uniform vec3 uLime;
+uniform vec3 uBone;
+
+varying vec3 vNormal;
+varying vec3 vViewDir;
+varying float vHeight;
+
+void main() {
+    vec3 N = normalize(vNormal);
+    vec3 V = normalize(vViewDir);
+
+    // One fresnel term
+    float fres = pow(1.0 - max(dot(N, V), 0.0), 2.6);
+
+    // One hue ramp: uDark -> uLime -> uBone
+    float t = fract(fres * 0.85 + vHeight * 0.35 + uTime * 0.015);
+    vec3 ramp = mix(uDark, uLime, smoothstep(0.0, 0.5, t));
+    ramp = mix(ramp, uBone, smoothstep(0.5, 1.0, t));
+
+    // Opaque base ≈ page background so the sheet melts into the page
+    vec3 color = uDark + (ramp * 0.28 + fres * uLime * 0.55) * uDim;
+    gl_FragColor = vec4(color, 1.0);
+}
+`;
 
 /** Clamp helper. */
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
@@ -43,29 +162,27 @@ class PortfolioScene {
     constructor() {
         this.canvas = document.getElementById('bg-canvas');
         this.mobile = isMobileLike();
+        this.reduced = prefersReducedMotion();
         this.clock = new THREE.Clock();
         this.mouse = new THREE.Vector2(0, 0);
         this.mouseTarget = new THREE.Vector2(0, 0);
         this.running = false;
         this.rafId = null;
-        this.stations = {};
-        this.stationSections = [
-            { id: 'home', key: 'hero' },
-            { id: 'stack', key: 'skills' },
-            { id: 'work', key: 'projects' },
-        ];
+        this.contextLost = false;
+        this.halfW = 6;
+        this.halfH = 4;
         this._onResize = this.onResize.bind(this);
         this._onMouseMove = this.onMouseMove.bind(this);
         this._onVisibility = this.onVisibility.bind(this);
+        this._onContextLost = this.onContextLost.bind(this);
+        this._onContextRestored = this.onContextRestored.bind(this);
         this._tick = this.tick.bind(this);
-        this._onScroll = this.onScroll.bind(this);
     }
 
     /** Entry point. Returns false if the scene could not be created. */
     init() {
         if (!this.canvas) return false;
         if (!webglSupported()) return false;
-        if (prefersReducedMotion()) return false;
 
         try {
             this.renderer = new THREE.WebGLRenderer({
@@ -75,256 +192,57 @@ class PortfolioScene {
                 powerPreference: 'high-performance',
             });
         } catch (err) {
-            console.warn('WebGL renderer unavailable; skipping 3D scene.', err);
+            console.warn('WebGL renderer unavailable; skipping Mercury Sheet.', err);
             return false;
         }
 
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.mobile ? 1.5 : 2));
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(
-            55,
-            window.innerWidth / window.innerHeight,
-            0.1,
-            100
-        );
-        this.camera.position.set(0, 0, 12);
+        this.camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+        this.camera.position.set(0, 0, this.mobile ? 9 : 7.5);
 
-        this.buildStations();
+        this.buildSheet();
+        this.resize();
         this.attachListeners();
-        this.onScroll();
-        this.start();
+
+        if (this.reduced) {
+            // One static frame at uTime = 0 — never a loop.
+            this.uniforms.uTime.value = 0;
+            this.renderFrame();
+        } else {
+            this.start();
+        }
         return true;
     }
 
-    /** Build all three stations as object groups. */
-    buildStations() {
-        this.stations.hero = this.buildHeroStation();
-        this.stations.skills = this.buildSkillsStation();
-        this.stations.projects = this.buildProjectsStation();
-        Object.values(this.stations).forEach((group) => {
-            group.visible = false;
-            this.scene.add(group);
+    /** Perf budgets: mobile caps DPR at 1, desktop at 1.5 (never above 2). */
+    pixelRatio() {
+        const dpr = window.devicePixelRatio || 1;
+        return Math.min(dpr, isMobileLike() ? 1 : 1.5, 2);
+    }
+
+    /** The single mesh: a 7×7 displaced plane, right-of-centre in the hero. */
+    buildSheet() {
+        const segments = this.mobile ? 96 : 160;
+        this.geometry = new THREE.PlaneGeometry(7, 7, segments, segments);
+        this.uniforms = {
+            uTime: { value: 0 },
+            uMouse: { value: new THREE.Vector2(0, 0) },
+            uAmp: { value: this.mobile ? 0.7 : 1.1 },
+            uDim: { value: this.mobile ? 0.6 : 1.0 },
+            uDark: { value: new THREE.Color(0x050505) },
+            uLime: { value: new THREE.Color(0xc8ff2f) },
+            uBone: { value: new THREE.Color(0xe9e6dc) },
+        };
+        this.material = new THREE.ShaderMaterial({
+            uniforms: this.uniforms,
+            vertexShader: VERTEX_SHADER,
+            fragmentShader: FRAGMENT_SHADER,
+            transparent: false,
         });
-    }
-
-    /* ------------------------------------------------------------------
-     * Station 1 — Hero: edge-lit wireframe code blocks, node network,
-     * additive particle field.
-     * ------------------------------------------------------------------ */
-    buildHeroStation() {
-        const group = new THREE.Group();
-
-        // Floating edge-lit wireframe code blocks
-        const blockCount = this.mobile ? 3 : 5;
-        for (let i = 0; i < blockCount; i++) {
-            const w = 1.4 + Math.random() * 1.2;
-            const h = 0.8 + Math.random() * 0.7;
-            const block = this.createCodeBlock(w, h);
-            block.position.set(
-                2.2 + Math.random() * 3.5,
-                (Math.random() - 0.5) * 4,
-                -1 + Math.random() * 2
-            );
-            block.rotation.z = (Math.random() - 0.5) * 0.3;
-            block.userData.spin = (Math.random() - 0.5) * 0.15;
-            block.userData.bobOffset = Math.random() * Math.PI * 2;
-            block.userData.baseY = block.position.y;
-            group.add(block);
-        }
-
-        // Node network (icosahedron nodes + connecting lines)
-        group.add(this.createNodeNetwork());
-
-        // Additive particle field
-        group.add(this.createParticleField());
-
-        return group;
-    }
-
-    /** A wireframe "code block": glassy faces + glowing accent edges. */
-    createCodeBlock(width, height) {
-        const block = new THREE.Group();
-        const depth = 0.35;
-        const geo = new THREE.BoxGeometry(width, height, depth);
-
-        const fill = new THREE.Mesh(
-            geo,
-            new THREE.MeshBasicMaterial({
-                color: 0x061014,
-                transparent: true,
-                opacity: 0.35,
-            })
-        );
-        const edges = new THREE.LineSegments(
-            new THREE.EdgesGeometry(geo),
-            new THREE.LineBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.9 })
-        );
-        block.add(fill, edges);
-        return block;
-    }
-
-    /** A constellation of icosahedron nodes joined by LineSegments. */
-    createNodeNetwork() {
-        const net = new THREE.Group();
-        const nodeCount = this.mobile ? 8 : 12;
-        const positions = [];
-        for (let i = 0; i < nodeCount; i++) {
-            const p = new THREE.Vector3(
-                2 + (Math.random() - 0.5) * 6,
-                (Math.random() - 0.5) * 5,
-                -1 + (Math.random() - 0.5) * 4
-            );
-            positions.push(p);
-            const node = new THREE.Mesh(
-                new THREE.IcosahedronGeometry(0.09, 0),
-                new THREE.MeshBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.85 })
-            );
-            node.position.copy(p);
-            net.add(node);
-        }
-        // Connect each node to its two nearest neighbours
-        const segs = [];
-        positions.forEach((p, i) => {
-            const others = positions
-                .map((q, j) => ({ q, j, d: p.distanceTo(q) }))
-                .filter((o) => o.j !== i)
-                .sort((a, b) => a.d - b.d)
-                .slice(0, 2);
-            others.forEach((o) => segs.push(p.x, p.y, p.z, o.q.x, o.q.y, o.q.z));
-        });
-        const lineGeo = new THREE.BufferGeometry();
-        lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(segs, 3));
-        net.add(
-            new THREE.LineSegments(
-                lineGeo,
-                new THREE.LineBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.25 })
-            )
-        );
-        return net;
-    }
-
-    /** Wide additive particle field. */
-    createParticleField() {
-        const count = this.mobile ? 400 : 2000;
-        const positions = new Float32Array(count * 3);
-        for (let i = 0; i < count; i++) {
-            positions[i * 3] = (Math.random() - 0.5) * 30;
-            positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
-            positions[i * 3 + 2] = (Math.random() - 0.5) * 14;
-        }
-        const geo = new THREE.BufferGeometry();
-        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        const mat = new THREE.PointsMaterial({
-            color: ACCENT,
-            size: 0.04,
-            transparent: true,
-            opacity: 0.5,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-        });
-        return new THREE.Points(geo, mat);
-    }
-
-    /* ------------------------------------------------------------------
-     * Station 2 — Skills constellation: 4 hub nodes (skill groups) + 18 leaf
-     * nodes (the 5/5/5/3 skills), hub→leaf edges, flying into place on enter.
-     * DOM skill lists remain the accessible source of truth (canvas is
-     * aria-hidden and purely decorative).
-     * ------------------------------------------------------------------ */
-    buildSkillsStation() {
-        const group = new THREE.Group();
-        const leavesPerHub = [5, 5, 5, 3]; // matches the four skill groups
-        const leafNodes = [];
-
-        // Hub positions spread horizontally
-        const hubXs = [-4.5, -1.5, 1.5, 4.5];
-        leavesPerHub.forEach((leafCount, hi) => {
-            const hubPos = new THREE.Vector3(hubXs[hi], 0, 0);
-            const hub = this.createGlowNode(0.28);
-            hub.position.copy(hubPos);
-            group.add(hub);
-
-            const segs = [];
-            for (let li = 0; li < leafCount; li++) {
-                const angle = (li / leafCount) * Math.PI * 2;
-                const radius = 1.1 + Math.random() * 0.4;
-                const target = new THREE.Vector3(
-                    hubPos.x + Math.cos(angle) * radius,
-                    hubPos.y + Math.sin(angle) * radius * 0.8,
-                    (Math.random() - 0.5) * 1.2
-                );
-                const leaf = this.createGlowNode(0.11);
-                leaf.position.copy(target);
-                leaf.userData.target = target.clone();
-                // Scattered start position for the fly-in
-                leaf.userData.start = new THREE.Vector3(
-                    target.x + (Math.random() - 0.5) * 8,
-                    target.y + (Math.random() - 0.5) * 8,
-                    -6 + Math.random() * 4
-                );
-                leaf.position.copy(leaf.userData.start);
-                leafNodes.push(leaf);
-                group.add(leaf);
-                segs.push(hubPos.x, hubPos.y, hubPos.z, target.x, target.y, target.z);
-            }
-
-            const lineGeo = new THREE.BufferGeometry();
-            lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(segs, 3));
-            group.add(
-                new THREE.LineSegments(
-                    lineGeo,
-                    new THREE.LineBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.28 })
-                )
-            );
-        });
-
-        group.userData.leafNodes = leafNodes;
-        group.userData.fly = { active: false, t: 0 };
-        return group;
-    }
-
-    /** Small glowing icosahedron node. */
-    createGlowNode(radius) {
-        return new THREE.Mesh(
-            new THREE.IcosahedronGeometry(radius, 0),
-            new THREE.MeshBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.9 })
-        );
-    }
-
-    /* ------------------------------------------------------------------
-     * Station 3 — Projects: 3 floating glass-panel frames as an ambient
-     * backdrop. The primary card interaction is the CSS 3D tilt in main.js.
-     * ------------------------------------------------------------------ */
-    buildProjectsStation() {
-        const group = new THREE.Group();
-        const frameCount = this.mobile ? 2 : 3;
-        const xs = [-3.4, 0, 3.4];
-        for (let i = 0; i < frameCount; i++) {
-            const frame = this.createGlassFrame(2.6, 3.4);
-            frame.position.set(xs[i], (Math.random() - 0.5) * 0.6, -0.5 + Math.random());
-            frame.userData.baseY = frame.position.y;
-            frame.userData.bobOffset = Math.random() * Math.PI * 2;
-            group.add(frame);
-        }
-        return group;
-    }
-
-    /** A glass-panel frame: translucent face + glowing border edges. */
-    createGlassFrame(width, height) {
-        const frame = new THREE.Group();
-        const geo = new THREE.PlaneGeometry(width, height);
-        const face = new THREE.Mesh(
-            geo,
-            new THREE.MeshBasicMaterial({ color: 0x0a1418, transparent: true, opacity: 0.18 })
-        );
-        const border = new THREE.LineSegments(
-            new THREE.EdgesGeometry(geo),
-            new THREE.LineBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.55 })
-        );
-        frame.add(face, border);
-        return frame;
+        this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.mesh.rotation.set(-0.35, 0, 0.12);
+        this.mesh.position.x = this.mobile ? 0 : 2.2;
+        this.scene.add(this.mesh);
     }
 
     /* ------------------------------------------------------------------
@@ -333,73 +251,72 @@ class PortfolioScene {
     attachListeners() {
         window.addEventListener('resize', this._onResize);
         document.addEventListener('visibilitychange', this._onVisibility);
-        window.addEventListener('scroll', this._onScroll, { passive: true });
-        // Mouse parallax only — never touchmove/pointerdown (canvas is pointer-events:none).
-        if (!this.mobile) {
+        // WebGL contexts are dropped when Android backgrounds the tab
+        this.canvas.addEventListener('webglcontextlost', this._onContextLost, false);
+        this.canvas.addEventListener('webglcontextrestored', this._onContextRestored, false);
+        // Mouse ripple only — never touchmove/pointerdown (canvas is pointer-events:none)
+        if (!this.mobile && !this.reduced) {
             window.addEventListener('mousemove', this._onMouseMove, { passive: true });
         }
     }
 
     onMouseMove(e) {
-        this.mouseTarget.x = (e.clientX / window.innerWidth) * 2 - 1;
-        this.mouseTarget.y = -((e.clientY / window.innerHeight) * 2 - 1);
+        const nx = (e.clientX / window.innerWidth) * 2 - 1;
+        const ny = -((e.clientY / window.innerHeight) * 2 - 1);
+        // Project the pointer into plane-local space (approximate, decorative)
+        this.mouseTarget.x = nx * this.halfW - this.mesh.position.x;
+        this.mouseTarget.y = clamp(ny * this.halfH, -4.5, 4.5);
     }
 
     onResize() {
         if (!this.renderer) return;
-        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.resize();
+    }
+
+    resize() {
+        const w = this.canvas.clientWidth || window.innerWidth;
+        const h = this.canvas.clientHeight || window.innerHeight;
+        if (!w || !h) return;
+
+        this.renderer.setPixelRatio(this.pixelRatio());
+        this.renderer.setSize(w, h, false); // CSS owns the element size (inset:0)
+        this.camera.aspect = w / h;
         this.camera.updateProjectionMatrix();
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.mobile ? 1.5 : 2));
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+        // World extents at the plane's depth — used to map the mouse ripple
+        const halfH = Math.tan((this.camera.fov * Math.PI) / 360) * this.camera.position.z;
+        this.halfH = halfH;
+        this.halfW = halfH * this.camera.aspect;
+
+        if (this.reduced) this.renderFrame();
     }
 
     onVisibility() {
+        if (this.reduced) return;
         if (document.hidden) this.stop();
         else this.start();
     }
 
-    /** Fade/scale stations based on how centered their section is in the viewport. */
-    onScroll() {
-        const vh = window.innerHeight;
-        this.stationSections.forEach(({ id, key }) => {
-            const el = document.getElementById(id);
-            const group = this.stations[key];
-            if (!el || !group) return;
-            const rect = el.getBoundingClientRect();
-            const center = rect.top + rect.height / 2;
-            const dist = Math.abs(center - vh / 2);
-            const fade = clamp(1 - dist / (vh * 0.9), 0, 1);
-            group.visible = fade > 0.02;
-            if (group.userData.fly && fade > 0.02) group.userData.fly.active = true;
-            this.setGroupOpacity(group, fade);
-            const s = 0.85 + fade * 0.15;
-            group.scale.setScalar(s);
-        });
+    onContextLost(e) {
+        e.preventDefault(); // required for the context to be restorable
+        this.contextLost = true;
+        this.stop();
     }
 
-    /** Recursively set material opacity = baseOpacity * fade. */
-    setGroupOpacity(obj, fade) {
-        obj.traverse((child) => {
-            if (child.material) {
-                const mats = Array.isArray(child.material) ? child.material : [child.material];
-                mats.forEach((m) => {
-                    if (m.userData.baseOpacity === undefined) {
-                        m.userData.baseOpacity = m.opacity;
-                    }
-                    m.opacity = m.userData.baseOpacity * fade;
-                });
-            }
-        });
+    onContextRestored() {
+        this.contextLost = false;
+        if (this.reduced) this.renderFrame();
+        else this.start();
     }
 
     /* ------------------------------------------------------------------
      * Render loop
      * ------------------------------------------------------------------ */
     start() {
-        if (this.running) return;
+        if (this.running || this.contextLost || document.hidden) return;
         this.running = true;
         this.clock.getDelta();
-        this.tick();
+        this._tick();
     }
 
     stop() {
@@ -408,78 +325,34 @@ class PortfolioScene {
         this.rafId = null;
     }
 
+    renderFrame() {
+        if (!this.renderer || this.contextLost) return;
+        this.renderer.render(this.scene, this.camera);
+    }
+
     tick() {
         if (!this.running) return;
         this.rafId = requestAnimationFrame(this.tick);
-        const t = this.clock.getElapsedTime();
-        const dt = Math.min(t - (this._lastT || t), 0.05);
-        this._lastT = t;
 
-        // Lerp mouse for smooth parallax
+        this.uniforms.uTime.value = this.clock.getElapsedTime();
         this.mouse.lerp(this.mouseTarget, 0.05);
-        if (!this.mobile) {
-            this.camera.position.x = this.mouse.x * 0.6;
-            this.camera.position.y = this.mouse.y * 0.4;
-        }
-        this.camera.lookAt(0, 0, 0);
+        this.uniforms.uMouse.value.copy(this.mouse);
 
-        // Animate hero station
-        const hero = this.stations.hero;
-        if (hero && hero.visible) {
-            hero.rotation.y = Math.sin(t * 0.1) * 0.15;
-            hero.children.forEach((child) => {
-                if (child.userData && child.userData.baseY !== undefined) {
-                    child.position.y =
-                        child.userData.baseY + Math.sin(t * 0.6 + child.userData.bobOffset) * 0.15;
-                    child.rotation.y += (child.userData.spin || 0) * 0.01;
-                }
-            });
-        }
-
-        // Animate skills station fly-in
-        const skills = this.stations.skills;
-        if (skills && skills.visible && skills.userData.fly) {
-            const fly = skills.userData.fly;
-            if (fly.active && fly.t < 1) {
-                fly.t = Math.min(1, fly.t + dt * 0.6);
-                const e = 1 - Math.pow(1 - fly.t, 3); // easeOutCubic
-                skills.userData.leafNodes.forEach((leaf) => {
-                    leaf.position.lerpVectors(leaf.userData.start, leaf.userData.target, e);
-                });
-            }
-            skills.rotation.y = Math.sin(t * 0.15) * 0.08;
-        }
-
-        // Animate projects station
-        const projects = this.stations.projects;
-        if (projects && projects.visible) {
-            projects.rotation.y = Math.sin(t * 0.12) * 0.1;
-            projects.children.forEach((child) => {
-                if (child.userData && child.userData.baseY !== undefined) {
-                    child.position.y =
-                        child.userData.baseY + Math.sin(t * 0.5 + child.userData.bobOffset) * 0.1;
-                }
-            });
-        }
-
-        this.renderer.render(this.scene, this.camera);
+        this.renderFrame();
     }
 
     /** Free GPU resources on teardown. */
     dispose() {
         this.stop();
         window.removeEventListener('resize', this._onResize);
-        window.removeEventListener('scroll', this._onScroll);
         window.removeEventListener('mousemove', this._onMouseMove);
         document.removeEventListener('visibilitychange', this._onVisibility);
-        if (!this.scene) return;
-        this.scene.traverse((child) => {
-            if (child.geometry) child.geometry.dispose();
-            if (child.material) {
-                const mats = Array.isArray(child.material) ? child.material : [child.material];
-                mats.forEach((m) => m.dispose());
-            }
-        });
+        if (this.canvas) {
+            this.canvas.removeEventListener('webglcontextlost', this._onContextLost);
+            this.canvas.removeEventListener('webglcontextrestored', this._onContextRestored);
+        }
+        if (this.geometry) this.geometry.dispose();
+        if (this.material) this.material.dispose();
         if (this.renderer) this.renderer.dispose();
     }
 }
@@ -488,7 +361,8 @@ class PortfolioScene {
 const portfolioScene = new PortfolioScene();
 const ok = portfolioScene.init();
 if (!ok) {
-    // Graceful fallback: hide the (empty) canvas so no broken element shows.
+    // Graceful fallback: hide the (empty) canvas; .hero::before provides the
+    // static lime-radial + grain fill so the hero never looks empty.
     const canvas = document.getElementById('bg-canvas');
     if (canvas) canvas.style.display = 'none';
     portfolioScene.dispose();
