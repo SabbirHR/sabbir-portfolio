@@ -612,21 +612,16 @@
     </footer>
 
     <script src="assets/js/main.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <!-- Lenis: optional smooth scroll (droppable — see assets/js/lenis-init.js) -->
-    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
     <script src="assets/js/lenis-init.js"></script>
-    <!-- Cursor layer: classic script AFTER gsap so window.gsap is guaranteed -->
     <script src="assets/js/cursor.js"></script>
     <script type="importmap">
-        {
-            "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
-                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
-            }
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
+            "motion": "https://cdn.jsdelivr.net/npm/motion@13.5.1/+esm"
         }
-    </script>
+    }
     <script type="module" src="assets/js/three-scene.js"></script>
     <script type="module" src="assets/js/animations.js"></script>
 </body>

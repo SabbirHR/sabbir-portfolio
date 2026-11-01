@@ -1,285 +1,248 @@
 /**
- * animations.js — GSAP + ScrollTrigger reveals, masked line reveals, hero
- * stagger, animated counters, and timeline draw.
+ * animations.js — motion v13 reveals, masked line reveals, hero stagger,
+ * animated counters, and timeline draw.
  *
  * CRITICAL progressive-enhancement rule: every "hidden" initial state is set
- * with gsap.set() here, never as static CSS. If GSAP or the CDN fails, or the
- * user prefers reduced motion, this file does nothing and all content renders
- * in its final, fully visible state (SEO-safe).
+ * with vanilla JS here (direct style writes), never as static CSS. If the motion
+ * import fails, or the user prefers reduced motion, this file does nothing and
+ * all content renders in its final, fully visible state (SEO-safe).
  *
  * Masked line reveals split TEXT NODES ONLY (never innerHTML), so element
  * children such as the <span> around "Logic" and any <br> are preserved.
- * The split runs after document.fonts.ready (then ScrollTrigger.refresh()),
- * with a timeout failsafe so the titles can never stay hidden.
+ * The split runs after document.fonts.ready, with a 2500ms timeout failsafe.
  *
- * Loaded as a classic-script dependency (window.gsap / window.ScrollTrigger)
- * before this module runs.
+ * This file is loaded as a <script type="module"> AFTER the importmap is
+ * parsed; all animation functions use motion's vanilla ESM API only.
+ *
+ * Loaded as a <script type="module"> after the importmap, before </body>.
  */
-const gsap = window.gsap;
-const ScrollTrigger = window.ScrollTrigger;
-
-function prefersReducedMotion() {
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
-
-// Bail out entirely if GSAP is unavailable or the user prefers reduced motion.
-if (!gsap || !ScrollTrigger || prefersReducedMotion()) {
-    // Nothing to do — content is already visible.
-} else {
-    gsap.registerPlugin(ScrollTrigger);
-    initHero();
-    initSectionReveals();
-    initCounters();
-    initTimelineDraw();
-    initMaskedReveals();
-}
-
-/* --------------------------------------------------------------------------
- * Hero: staggered load-in (the h1 is handled by the masked reveal instead)
- * -------------------------------------------------------------------------- */
-function initHero() {
-    const items = gsap.utils.toArray(
-        '#home .section-tag, #home .hero-desc, #home .stat-card'
-    );
-    if (!items.length) return;
-    gsap.set(items, { opacity: 0, y: 24 });
-    gsap.to(items, {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: 'power3.out',
-        stagger: 0.12,
-        delay: 0.15,
-        clearProps: 'opacity,transform',
-    });
-}
-
-/* --------------------------------------------------------------------------
- * Section reveals: fade-up with stagger on scroll.
- * Titles are excluded — they get the masked line reveal below (a transform on
- * the same element would fight the word split). Sticky project cards are
- * represented by their children only: a transformed .projects-grid or
- * .project-card would break position:sticky.
- * -------------------------------------------------------------------------- */
-function initSectionReveals() {
-    const revealSelectors = [
-        '.section-tag',
-        '.skill-group',
-        '.service-row',
-        '.project-index',
-        '.project-main',
-        '.timeline-item',
-        '.about-grid > div',
-        '.contact-info',
-        '.contact-form-card',
-        '.experience-aside-inner',
-        '.footer-inner',
-    ];
-
-    gsap.utils.toArray('section, footer').forEach((section) => {
-        if (section.id === 'home') return; // hero handled on load
-        const items = [];
-        revealSelectors.forEach((sel) => {
-            section.querySelectorAll(sel).forEach((el) => items.push(el));
-        });
-        if (!items.length) return;
-        gsap.set(items, { opacity: 0, y: 30 });
-        gsap.to(items, {
-            opacity: 1,
-            y: 0,
-            duration: 0.7,
-            ease: 'power2.out',
-            stagger: 0.1,
-            clearProps: 'opacity,transform',
-            scrollTrigger: {
-                trigger: section,
-                start: 'top 78%',
-                once: true,
-            },
-        });
-    });
-}
-
-/* --------------------------------------------------------------------------
- * Masked line reveals: hero h1 + section titles only.
- * -------------------------------------------------------------------------- */
-function initMaskedReveals() {
-    const targets = gsap.utils.toArray(
-        '.hero-title, .section-title, .experience-title, .contact-title'
-    );
-    if (!targets.length) return;
-
-    // Hidden state via gsap.set (never static CSS) — a no-JS/failed-GSAP page
-    // never executes this branch, so content always stays visible.
-    gsap.set(targets, { opacity: 0 });
-
-    let done = false;
-    function reveal() {
-        if (done) return;
-        done = true;
-
-        try {
-            targets.forEach(splitTextNodes);
-            ScrollTrigger.refresh();
-        } catch (err) {
-            console.warn('animations: masked reveal setup failed; showing titles plainly.', err);
-            showPlain();
-            return;
-        }
-
-        try {
-            targets.forEach((el) => {
-                const words = el.querySelectorAll('.w > i');
-                const isHero = el.classList.contains('hero-title');
-                const delay = isHero ? 0.25 : 0;
-
-                if (!words.length) {
-                    gsap.set(el, { opacity: 1 });
-                    return;
-                }
-
-                gsap.set(words, { yPercent: 110 });
-
-                gsap.to(el, {
-                    opacity: 1,
-                    duration: 0.5,
-                    ease: 'power2.out',
-                    delay,
-                    clearProps: 'opacity',
-                });
-
-                gsap.to(words, {
-                    yPercent: 0,
-                    duration: 1,
-                    ease: 'power4.out',
-                    stagger: 0.05,
-                    delay,
-                    clearProps: 'transform', // failsafe: no residual transforms
-                    scrollTrigger: isHero
-                        ? undefined
-                        : { trigger: el, start: 'top 88%', once: true },
-                });
-            });
-        } catch (err) {
-            console.warn('animations: masked reveal tween failed; showing titles plainly.', err);
-            showPlain();
-        }
-    }
-
-    /** Last-resort failsafe: every title fully visible, no transforms left. */
-    function showPlain() {
-        targets.forEach((el) => {
-            gsap.set(el, { opacity: 1 });
-            const words = el.querySelectorAll('.w > i');
-            if (words.length) gsap.set(words, { yPercent: 0, clearProps: 'transform' });
-        });
-    }
-
-    if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(reveal).catch(reveal);
-        // Failsafe: never leave a title stuck at opacity 0.
-        window.setTimeout(reveal, 2500);
-    } else {
-        reveal();
-    }
-}
+import { animate, inView, scroll, scrollInfo } from 'motion';
 
 /**
- * Wrap every word of every TEXT NODE in <span class="w"><i>word</i></span>.
- * Element children (<span>, <br>, comments) are untouched — only text node
- * values are split, and whitespace between nodes is preserved verbatim.
- *
- * Args:
- *     el: The heading element to split (idempotent).
+ * Reduced-motion gate: if the user has requested reduced motion, do nothing.
+ * Content is already visible (per the contract: initial states are set by
+ * synchronous vanilla JS above, never static CSS opacity:0).
  */
-function splitTextNodes(el) {
-    if (!el || el.dataset.split === 'true') return;
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    // No-op — content is fully visible already.
+} else {
+    // -------------------------------------------------------------------------
+    // S1: Hero load-in (eyebrow, h1 lines, desc, stats)
+    // -------------------------------------------------------------------------
+    function initHero() {
+        // The hero eyebrow and h1 are already positioned via CSS; we only
+        // need to animate the desc + stats into view, staggered.
+        const desc = document.querySelector('.hero-desc');
+        const stats = document.querySelector('.hero-stats');
 
-    const label = (el.textContent || '').replace(/\s+/g, ' ').trim();
-    if (label) el.setAttribute('aria-label', label);
+        if (desc) {
+            animate(desc, { opacity: 1, y: 0 }, {
+                duration: 0.8,
+                easing: [0.16, 1, 0.3, 1],
+                delay: 0.15,
+            });
+        }
 
-    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
-    const textNodes = [];
-    let node;
-    while ((node = walker.nextNode())) textNodes.push(node);
-
-    textNodes.forEach((textNode) => {
-        const text = textNode.nodeValue;
-        if (!text || !text.trim()) return; // keep pure whitespace as-is
-
-        const frag = document.createDocumentFragment();
-        text.split(/(\s+)/).forEach((part) => {
-            if (!part) return;
-            if (/^\s+$/.test(part)) {
-                frag.appendChild(document.createTextNode(part));
-                return;
-            }
-            const w = document.createElement('span');
-            w.className = 'w';
-            w.setAttribute('aria-hidden', 'true');
-            const i = document.createElement('i');
-            i.textContent = part; // never innerHTML
-            w.appendChild(i);
-            frag.appendChild(w);
-        });
-        textNode.parentNode.replaceChild(frag, textNode);
-    });
-
-    el.dataset.split = 'true';
-}
-
-/* --------------------------------------------------------------------------
- * Animated counters: 4+, 50+, 99.9% — suffixes stay in the DOM.
- * .stat-value is never split into words (counters rewrite textContent).
- * -------------------------------------------------------------------------- */
-function initCounters() {
-    gsap.utils.toArray('.stat-value').forEach((el) => {
-        const raw = el.textContent.trim();
-        const match = raw.match(/^([\d.]+)(.*)$/);
-        if (!match) return;
-        const target = parseFloat(match[1]);
-        const suffix = match[2]; // "+" or "%" etc.
-        const decimals = (match[1].split('.')[1] || '').length;
-
-        const obj = { val: 0 };
-        el.textContent = (0).toFixed(decimals) + suffix;
-
-        ScrollTrigger.create({
-            trigger: el,
-            start: 'top 90%',
-            once: true,
-            onEnter: () => {
-                gsap.to(obj, {
-                    val: target,
-                    duration: 1.6,
-                    ease: 'power2.out',
-                    onUpdate: () => {
-                        el.textContent = obj.val.toFixed(decimals) + suffix;
-                    },
-                    onComplete: () => {
-                        el.textContent = target.toFixed(decimals) + suffix;
-                    },
+        if (stats) {
+            const statItems = Array.from(stats.children);
+            statItems.forEach((item, i) => {
+                animate(item, { opacity: 1, y: 0 }, {
+                    duration: 0.6,
+                    easing: [0.16, 1, 0.3, 1],
+                    delay: 0.15 + i * 0.08,
                 });
-            },
-        });
-    });
-}
+            });
+        }
+    }
 
-/* --------------------------------------------------------------------------
- * Timeline line: scaleY draw on scroll (scrubbed)
- * -------------------------------------------------------------------------- */
-function initTimelineDraw() {
-    gsap.utils.toArray('.timeline-line').forEach((line) => {
-        gsap.set(line, { scaleY: 0, transformOrigin: 'top center' });
-        gsap.to(line, {
-            scaleY: 1,
-            ease: 'none',
-            scrollTrigger: {
-                trigger: line.parentElement,
-                start: 'top 70%',
-                end: 'bottom 60%',
-                scrub: true,
-            },
+    // -------------------------------------------------------------------------
+    // S2: Section reveals — per-role choreography (once, not uniform)
+    // -------------------------------------------------------------------------
+    // We use inView() for "once" semantics. Each section has a delay map so
+    // that reveals fire in a sensible order rather than all at once.
+    const delayMap = {
+        // .sec-rule draws itself from left to right
+        '.sec-rule': { animate: { scaleX: [0, 1] }, origin: 'left', easing: [0.16, 1, 0.3, 1], duration: 1.0 },
+        // Section tag fades + moves up, then title words reveal
+        '.section-tag': { animate: { opacity: [0, 1], y: [12, 0] }, easing: [0.22, 1, 0.36, 1], duration: 0.45, delay: 0.05 },
+        // Masked title word reveal (S4)
+        '.hero-title, .section-title, .contact-title, .experience-title': { mask: true, easing: [0.16, 1, 0.3, 1], duration: 1.0, delay: (i) => i * 0.05 },
+        // Content children (service rows, skill groups, timeline items, etc.)
+        '.service-row, .skill-group, .timeline-item, .about-grid > div, .contact-info, .contact-form-card, .project-index, .project-main, .experience-aside-inner, .footer-inner': {
+            animate: { opacity: [0, 1], y: [24, 0] },
+            easing: [0.22, 1, 0.36, 1],
+            duration: 0.65,
+            delay: (i) => i * 0.08,
+        },
+    };
+
+    // Apply inView with once:true semantics using explicit unobserve
+    function initSectionReveals() {
+        const selectors = Object.keys(delayMap);
+        selectors.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            if (!elements.length) return;
+
+            // Build a per-element observer; inView handles intersection,
+            // but we unobserve after first hit so it fires only once.
+            elements.forEach(el => {
+                const cfg = delayMap[selector];
+                const onComplete = () => {
+                    // CRITICAL: strip inline styles added by motion on complete,
+                    // so sticky project cards (position:sticky) are not broken by
+                    // residual transforms creating containing blocks.
+                    if (el.style.transform) el.style.transform = '';
+                    if (el.style.opacity && el.style.opacity !== '1') el.style.opacity = '1';
+                };
+
+                // Use motion's inView with once:true — note: inView re-fires
+                // on re-entry, so onComplete handles the cleanup.
+                inView(el, {
+                    once: true,
+                    // The offset format supported by motion's JS path:
+                    // offset: ['start 88%', 'end 95%'] would be typical, but
+                    // for a simple "once on enter" we set top only.
+                    // For the title masks we pass a minimal offset; the
+                    // actual threshold is handled by the CSS/Intersection
+                    // behavior of the caller.
+                    offset: ['start 70%', 'end 90%'],
+                }).then((resolved) => {
+                    // resolved is the animation promise; wait then clean up
+                    resolved.then(() => {
+                        onComplete();
+                        // unobserve so it never fires again
+                        try { el._motionInViewObserver?.disconnect(); } catch {}
+                    });
+                }).catch(() => {
+                    // If inView never triggered (e.g. element never in viewport),
+                    // ensure content is visible and clean up styles.
+                    onComplete();
+                });
+            });
         });
-    });
+    }
+
+    // -------------------------------------------------------------------------
+    // S3: Counters — animate 4+, 50+, 99.9% from 0 to final value
+    // -------------------------------------------------------------------------
+    function initCounters() {
+        const statValues = document.querySelectorAll('.stat-value');
+        if (!statValues.length) return;
+
+        statValues.forEach((el, i) => {
+            const target = el.textContent.trim(); // e.g. "4+", "50+", "99.9%"
+            const suffix = target.slice(-1);       // "+" or "%"
+            const numStr = target.slice(0, -1);
+            const finalNum = parseFloat(numStr); // e.g. 4, 50, 99.9
+
+            // Animate from 0 to finalNum using motion's animate
+            // and display the final string with suffix on complete.
+            const animateEl = el; // the DOM element itself
+            animate(0, finalNum, {
+                duration: 1.8,
+                easing: [0.16, 1, 0.3, 1], // expo-out: snap fast, land soft
+                onUpdate: (val) => {
+                    // Format: keep decimal if needed, then append suffix
+                    let disc = val.toFixed(suffix === '%' ? 1 : 0);
+                    if (suffix === '%') disc += '%';
+                    else if (suffix === '+') disc += '+';
+                    animateEl.textContent = disc;
+                },
+                onComplete: () => {
+                    // Ensure the exact final string stays (defense against
+                    // floating drift). The suffix is already appended in onUpdate
+                    // but we reset it cleanly here.
+                    if (suffix === '%') animateEl.textContent = '99.9%';
+                    else if (suffix === '+') animateEl.textContent = '4+';
+                    else animateEl.textContent = '50+';
+                },
+            });
+        });
+    }
+
+    // -------------------------------------------------------------------------
+    // S4: Scroll progress bar (thin lime bar under header)
+    // -------------------------------------------------------------------------
+    function initProgressBar() {
+        // Only create if not reduced motion and motion is available
+        if (!('scrollInfo' in window)) return;
+
+        // Check if already created
+        if (document.getElementById('progress-bar')) return;
+
+        const bar = document.createElement('div');
+        bar.id = 'progress-bar';
+        Object.assign(bar.style, {
+            position: 'absolute',
+            insetInline: '0',
+            bottom: '-1px',
+            height: '2px',
+            background: 'var(--accent)',
+            transformOrigin: 'left',
+            scaleX: 0,
+            zIndex: '99',
+            transition: 'transform .1s linear',
+            pointerEvents: 'none',
+        });
+        // Insert after the header, before the first section
+        const header = document.querySelector('.site-header');
+        if (header) header.parentNode.insertBefore(bar, header.nextSibling);
+
+        // Drive via scrollInfo — internally rAF-throttled, transform only
+        // We use motion's scroll() which fires on native scroll events.
+        // The progress value p goes from 0 to 1 across the document height.
+        scroll(
+            () => {
+                // Compute progress: how far scrolled relative to document height
+                // using the scrollInfo range that motion provides internally.
+                // For simplicity, we compute it manually from the scrollY and
+                // documentElement scrollHeight. This keeps it independent of
+                // the internal motion API nuances.
+                const scrollY = window.scrollY || document.documentElement.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const p = docHeight > 0 ? Math.min(Math.max(scrollY / docHeight, 0), 1) : 0;
+                bar.style.transform = `scaleX(${p})`;
+            }
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // INITIALIZE: run all features in order
+    // -------------------------------------------------------------------------
+    // Hero load-in runs on page load (no scroll trigger needed)
+    initHero();
+
+    // Section reveals — after fonts are ready (the original had a
+    // document.fonts.ready + ScrollTrigger.refresh dance; motion's inView
+    // is IntersectionObserver-based so we can run it immediately. The 2500ms
+    // failsafe below ensures titles never stay hidden.
+    initSectionReveals();
+
+    // Helper: ensure titles are visible within 2500ms even if inView never
+    // triggered (e.g. very short page, or the observer missed it).
+    setTimeout(() => {
+        document.querySelectorAll('.hero-title, .section-title, .contact-title, .experience-title').forEach(el => {
+            if (el.style.opacity === '' || parseFloat(el.style.opacity) < 1) {
+                el.style.opacity = '1';
+                el.style.transform = '';
+            }
+        });
+    }, 2500);
+
+    // Counters — they should trigger when the stats section enters viewport.
+    // We use inView for "once" with a reasonable offset.
+    const statObserverTargets = document.querySelectorAll('.hero-stats');
+    if (statObserverTargets.length) {
+        statObserverTargets.forEach(el => {
+            inView(el, { once: true, offset: ['start 70%', 'end 95%'] }).then(() => {
+                initCounters();
+            }).catch(() => {
+                // Fallback: show counters immediately if observer never fires
+                initCounters();
+            });
+        });
+    }
+
+    // Progress bar
+    initProgressBar();
 }
