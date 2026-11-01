@@ -427,6 +427,10 @@ class PortfolioScene {
 
 // Bootstrap
 const portfolioScene = new PortfolioScene();
+// Expose for the QA harness (tests/qa.js) — the harness is local-only and is
+// the sole consumer; production behaviour is unchanged.
+window.__portfolioScene = portfolioScene;
+
 const ok = portfolioScene.init();
 if (!ok) {
     // Graceful fallback: hide the (empty) canvas; .hero::before provides the

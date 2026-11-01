@@ -72,9 +72,12 @@ html {
 }
 
 /* Lenis active (see assets/js/lenis-init.js): drop the native smooth scroll
-   so GSAP-ticker scrolling and anchor jumps do not fight each other.
+   so smooth-scroll scrolling and anchor jumps do not fight each other.
+   Uses Lenis's OWN managed `lenis` class — Lenis rewrites <html> className
+   wholesale on scroll state changes (cleanUpClassName) and wipes foreign
+   classes, so a homemade marker class cannot survive native scrolling.
    scroll-padding-top above is untouched and keeps anchor offsets correct. */
-html.lenis-active {
+html.lenis {
     scroll-behavior: auto;
 }
 

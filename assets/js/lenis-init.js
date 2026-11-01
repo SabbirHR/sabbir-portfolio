@@ -1,60 +1,77 @@
 /**
  * lenis-init.js — optional smooth scrolling (Lenis, window mode only).
  *
- * Deliberately defensive: Lenis runs its own rAF loop; there is NO dependency
- * on GSAP or ScrollTrigger. If any sticky/anchor/scroll regression is observed,
- * delete the two <script> tags in index.html and this file — nothing else
- * depends on Lenis.
+ * Deliberately defensive: Lenis drives its OWN rAF loop here — there is NO
+ * dependency on any other animation engine. Everything is wrapped in try/catch:
+ * a broken Lenis degrades to native scrolling (Lenis.destroy() removes its
+ * managed classes, restoring CSS scroll-behavior). If window.Lenis never
+ * arrived (vendored script failed) this file does nothing at all.
  *
  * Contracts:
- *   - window mode ONLY — wrapper mode would break position:sticky
+ *   - window (default) mode ONLY — wrapper mode would break position:sticky
  *   - native touch scrolling is untouched (no syncTouch option passed)
  *   - scroll-padding-top keeps working (it is a separate CSS property)
- *   - html.lenis-active deletes scroll-behavior:smooth (see style.css)
+ *   - html.lenis (Lenis's OWN managed class) deletes scroll-behavior:smooth
+ *     (see style.css). A homemade marker class does NOT work here: Lenis
+ *     rewrites <html> className wholesale on scroll state changes and wipes
+ *     foreign classes — verified via cleanUpClassName in lenis 1.1.18.
+ *   - the loop SELF-SCHEDULES: one requestAnimationFrame at init, then raf()
+ *     asks for the next frame itself; time passed to lenis is the native
+ *     rAF timestamp in MILLISECONDS (Lenis expects ms — not gsap seconds)
  * DROP CONDITION: if any sticky/anchor/scroll regression is observed, delete
- * the two <script> tags in index.html and this file — nothing else depends on
- * Lenis.
+ * the two <script> tags in index.html (lenis.min.js + this file) — nothing
+ * else depends on Lenis.
  */
 (function initLenis() {
     'use strict';
 
     const Lenis = window.Lenis;
     if (!Lenis) return;
-
-    // Reduced-motion gate
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const root = document.documentElement;
+    let lenis = null;
+    let rafId = null;
+    let stopped = false;
 
     function teardown() {
-        if (window.lenis) {
+        stopped = true;
+        if (rafId !== null) {
+            window.cancelAnimationFrame(rafId);
+            rafId = null;
+        }
+        if (lenis) {
             try {
                 if (typeof lenis.destroy === 'function') lenis.destroy();
             } catch (err) {
                 console.warn('Lenis destroy failed (ignored).', err);
             }
-            window.lenis = null;
+            lenis = null;
         }
-        root.classList.remove('lenis-active');
+        // Lenis.destroy() removes its own managed classes (lenis*) — this is
+        // a best-effort belt-and-braces if destroy was unavailable.
+        try { root.classList.remove('lenis'); } catch (err) { /* non-fatal */ }
     }
 
-    const lenis = new Lenis(); // default window mode
-
-    // Lenis's own rAF loop — does NOT touch gsap.ticker or ScrollTrigger
+    /** One frame of Lenis. Schedules its own next frame; on error it tears
+     *  down once and lets native scrolling take over — never loops errors. */
     function raf(time) {
+        if (stopped) return;
         try {
-            lenis.raf(time * 1000);
+            lenis.raf(time);
         } catch (err) {
             console.warn('Lenis raf failed; falling back to native scrolling.', err);
             teardown();
+            return;
         }
+        rafId = window.requestAnimationFrame(raf);
     }
 
-    // Kick off the rAF loop
-    window.lenis = lenis;
-    lenis.on('scroll', () => { /* no-op — native scroll events fire on their own */ });
-    // We use the rAF loop only; no gsap.ticker coupling.
-    window.requestAnimationFrame(raf);
-
-    root.classList.add('lenis-active');
+    try {
+        lenis = new Lenis(); // default window mode; adds its own `lenis` class to <html>
+        rafId = window.requestAnimationFrame(raf);
+    } catch (err) {
+        console.warn('Lenis init failed; keeping native scrolling.', err);
+        teardown();
+    }
 })();

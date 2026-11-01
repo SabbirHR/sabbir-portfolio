@@ -1,248 +1,410 @@
 /**
  * animations.js — motion v13 reveals, masked line reveals, hero stagger,
- * animated counters, and timeline draw.
+ * animated counters, timeline draw, and scroll progress bar.
  *
  * CRITICAL progressive-enhancement rule: every "hidden" initial state is set
- * with vanilla JS here (direct style writes), never as static CSS. If the motion
- * import fails, or the user prefers reduced motion, this file does nothing and
- * all content renders in its final, fully visible state (SEO-safe).
+ * with SYNCHRONOUS vanilla-JS style writes here (el.style.opacity = '0'),
+ * never as static CSS. This module is a deferred <script type="module">:
+ * if the vendored motion bundle fails to load or this file throws early, the
+ * module never runs and all content renders in its final, fully visible state
+ * (SEO-safe). Under prefers-reduced-motion we bail before touching anything.
  *
  * Masked line reveals split TEXT NODES ONLY (never innerHTML), so element
  * children such as the <span> around "Logic" and any <br> are preserved.
- * The split runs after document.fonts.ready, with a 2500ms timeout failsafe.
+ * The split runs after document.fonts.ready, with a 2500ms timeout failsafe
+ * (showPlain) so titles can never stay hidden.
  *
- * This file is loaded as a <script type="module"> AFTER the importmap is
- * parsed; all animation functions use motion's vanilla ESM API only.
+ * motion v13 vanilla API used (verified against the vendored bundle):
+ *   inView(target, onEnter, { amount })  — fires ONCE by default unless the
+ *       callback returns false; returns a stop function (not a promise).
+ *       onEnter receives (target, entry).
+ *   animate(elements | 0, keyframes, options) — element form returns a
+ *       GroupAnimation whose `.finished` is a promise; single-value form
+ *       `animate(0, 50, { onUpdate, onComplete })` passes options through.
+ *   scroll(callback, { target, offset }) — JS-path scroll driver; callback
+ *       receives (progress 0..1, info). Works under Lenis window-mode
+ *       (it performs real window scrolling and fires native scroll events).
  *
- * Loaded as a <script type="module"> after the importmap, before </body>.
+ * Sticky-safety: a transform on `.project-card`/`.projects-grid` (or any
+ * transformed ANCESTOR of a sticky element) breaks position:sticky, so
+ * reveals animate CHILDREN only (.project-index, .project-main) and every
+ * completed animation strips its inline styles.
  */
-import { animate, inView, scroll, scrollInfo } from 'motion';
+import { animate, inView, scroll } from 'motion';
+
+/* Easing constants (GSAP mappings — one table so feel drift is reviewable):
+ * power3.out → cubic-bezier(.215,.61,.355,1)
+ * power2.out → cubic-bezier(.25,.46,.45,.94)
+ * power4.out → cubic-bezier(.165,.84,.44,1)
+ * expo-out   → cubic-bezier(.16,1,.3,1) */
+const EASE_POWER3 = [0.215, 0.61, 0.355, 1];
+const EASE_POWER2 = [0.25, 0.46, 0.45, 0.94];
+const EASE_POWER4 = [0.165, 0.84, 0.44, 1];
+const EASE_EXPO = [0.16, 1, 0.3, 1];
+
+function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/** Strip the inline styles an animation left behind so the stylesheet
+ *  governs again (no containing-block side effects on sticky children). */
+function clearInline(el, props) {
+    try {
+        props.forEach((p) => { el.style[p] = ''; });
+    } catch (err) { /* non-fatal */ }
+}
+
+/* ==========================================================================
+ * ENTRY — gates run BEFORE any hidden state is applied
+ * ========================================================================== */
+if (prefersReducedMotion()) {
+    // No-op — content is already fully visible (no module-added inline styles).
+} else {
+    initHero();
+    initMaskedReveals();
+    initSectionReveals();
+    initSecRules();
+    initCounters();
+    initTimelineDraw();
+    initProgressBar();
+}
+
+/* --------------------------------------------------------------------------
+ * Hero: staggered load-in (the h1 is handled by the masked reveal instead).
+ * Hidden states applied synchronously at setup; every item animates once.
+ * -------------------------------------------------------------------------- */
+function initHero() {
+    const items = document.querySelectorAll(
+        '#home .section-tag, #home .hero-desc, #home .stat-card'
+    );
+    if (!items.length) return;
+
+    const els = Array.from(items);
+    els.forEach((el) => { el.style.opacity = '0'; }); // sync hidden state
+
+    const controls = animate(els, { opacity: [0, 1], y: [24, 0] }, {
+        duration: 0.8,
+        ease: EASE_POWER3,
+        delay: (i) => 0.15 + i * 0.12,
+    });
+    controls.finished.then(() => {
+        els.forEach((el) => clearInline(el, ['opacity', 'transform']));
+    }).catch(() => { /* content already at final state via keyframes */ });
+}
+
+/* --------------------------------------------------------------------------
+ * Masked line reveals: hero h1 + section titles only.
+ * -------------------------------------------------------------------------- */
+function initMaskedReveals() {
+    const targets = document.querySelectorAll(
+        '.hero-title, .section-title, .experience-title, .contact-title'
+    );
+    if (!targets.length) return;
+
+    const els = Array.from(targets);
+    els.forEach((el) => { el.style.opacity = '0'; }); // sync hidden state
+
+    let done = false;
+    let stopFns = [];
+
+    function reveal() {
+        if (done) return;
+        done = true;
+
+        try {
+            els.forEach(splitTextNodes);
+        } catch (err) {
+            console.warn('animations: masked reveal setup failed; showing titles plainly.', err);
+            showPlain();
+            return;
+        }
+
+        try {
+            els.forEach((el) => {
+                const words = el.querySelectorAll('.w > i');
+                const isHero = el.classList.contains('hero-title');
+
+                // Synchronously mask the words (start state for the y travel).
+                // Keyframes ['110%','0%'] re-assert the start, this keeps the
+                // pre-trigger frame correct for scroll-triggered titles.
+                if (words.length) {
+                    words.forEach((w) => { w.style.transform = 'translateY(110%)'; });
+                }
+
+                if (isHero) {
+                    playReveal(el, words, 0.25, true);
+                } else {
+                    const stop = inView(el, () => {
+                        playReveal(el, words, 0, false);
+                        // once semantics: returning undefined unobserves
+                    }, { amount: 0.3 });
+                    if (typeof stop === 'function') stopFns.push(stop);
+                }
+            });
+        } catch (err) {
+            console.warn('animations: masked reveal failed; showing titles plainly.', err);
+            showPlain();
+        }
+    }
+
+    function playReveal(el, words, delay, immediateCleanup) {
+        animate(el, { opacity: [0, 1] }, {
+            duration: 0.5,
+            ease: EASE_POWER2,
+            delay,
+        }).finished.then(() => {
+            el.style.opacity = '';
+        }).catch(() => { el.style.opacity = '1'; });
+
+        if (!words || !words.length) return;
+        const list = Array.from(words);
+        animate(list, { y: ['110%', '0%'] }, {
+            duration: 1,
+            ease: EASE_POWER4,
+            delay: delay > 0 ? (i) => delay + i * 0.05 : (i) => i * 0.05,
+        }).finished.then(() => {
+            // failsafe: no residual transforms anywhere near sticky parents
+            list.forEach((w) => { w.style.transform = ''; });
+        }).catch(() => {
+            list.forEach((w) => { w.style.transform = ''; });
+        });
+    }
+
+    /** Last-resort failsafe: every title fully visible, no transforms left. */
+    function showPlain() {
+        stopFns.forEach((fn) => { try { fn(); } catch (e) { /* noop */ } });
+        els.forEach((el) => {
+            el.style.opacity = '1';
+            const words = el.querySelectorAll('.w > i');
+            words.forEach((w) => { w.style.transform = ''; });
+        });
+    }
+
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(reveal).catch(reveal);
+        // Failsafe: never leave a title stuck at opacity 0.
+        window.setTimeout(reveal, 2500);
+    } else {
+        reveal();
+    }
+}
 
 /**
- * Reduced-motion gate: if the user has requested reduced motion, do nothing.
- * Content is already visible (per the contract: initial states are set by
- * synchronous vanilla JS above, never static CSS opacity:0).
+ * Wrap every word of every TEXT NODE in <span class="w"><i>word</i></span>.
+ * Element children (<span>, <br>, comments) are untouched — only text node
+ * values are split, and whitespace between nodes is preserved verbatim.
+ *
+ * Args:
+ *     el: The heading element to split (idempotent).
  */
-if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    // No-op — content is fully visible already.
-} else {
-    // -------------------------------------------------------------------------
-    // S1: Hero load-in (eyebrow, h1 lines, desc, stats)
-    // -------------------------------------------------------------------------
-    function initHero() {
-        // The hero eyebrow and h1 are already positioned via CSS; we only
-        // need to animate the desc + stats into view, staggered.
-        const desc = document.querySelector('.hero-desc');
-        const stats = document.querySelector('.hero-stats');
+function splitTextNodes(el) {
+    if (!el || el.dataset.split === 'true') return;
 
-        if (desc) {
-            animate(desc, { opacity: 1, y: 0 }, {
-                duration: 0.8,
-                easing: [0.16, 1, 0.3, 1],
-                delay: 0.15,
-            });
-        }
+    const label = (el.textContent || '').replace(/\s+/g, ' ').trim();
+    if (label) el.setAttribute('aria-label', label);
 
-        if (stats) {
-            const statItems = Array.from(stats.children);
-            statItems.forEach((item, i) => {
-                animate(item, { opacity: 1, y: 0 }, {
-                    duration: 0.6,
-                    easing: [0.16, 1, 0.3, 1],
-                    delay: 0.15 + i * 0.08,
-                });
-            });
-        }
-    }
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    const textNodes = [];
+    let node;
+    while ((node = walker.nextNode())) textNodes.push(node);
 
-    // -------------------------------------------------------------------------
-    // S2: Section reveals — per-role choreography (once, not uniform)
-    // -------------------------------------------------------------------------
-    // We use inView() for "once" semantics. Each section has a delay map so
-    // that reveals fire in a sensible order rather than all at once.
-    const delayMap = {
-        // .sec-rule draws itself from left to right
-        '.sec-rule': { animate: { scaleX: [0, 1] }, origin: 'left', easing: [0.16, 1, 0.3, 1], duration: 1.0 },
-        // Section tag fades + moves up, then title words reveal
-        '.section-tag': { animate: { opacity: [0, 1], y: [12, 0] }, easing: [0.22, 1, 0.36, 1], duration: 0.45, delay: 0.05 },
-        // Masked title word reveal (S4)
-        '.hero-title, .section-title, .contact-title, .experience-title': { mask: true, easing: [0.16, 1, 0.3, 1], duration: 1.0, delay: (i) => i * 0.05 },
-        // Content children (service rows, skill groups, timeline items, etc.)
-        '.service-row, .skill-group, .timeline-item, .about-grid > div, .contact-info, .contact-form-card, .project-index, .project-main, .experience-aside-inner, .footer-inner': {
-            animate: { opacity: [0, 1], y: [24, 0] },
-            easing: [0.22, 1, 0.36, 1],
-            duration: 0.65,
-            delay: (i) => i * 0.08,
-        },
-    };
+    textNodes.forEach((textNode) => {
+        const text = textNode.nodeValue;
+        if (!text || !text.trim()) return; // keep pure whitespace as-is
 
-    // Apply inView with once:true semantics using explicit unobserve
-    function initSectionReveals() {
-        const selectors = Object.keys(delayMap);
-        selectors.forEach(selector => {
-            const elements = document.querySelectorAll(selector);
-            if (!elements.length) return;
-
-            // Build a per-element observer; inView handles intersection,
-            // but we unobserve after first hit so it fires only once.
-            elements.forEach(el => {
-                const cfg = delayMap[selector];
-                const onComplete = () => {
-                    // CRITICAL: strip inline styles added by motion on complete,
-                    // so sticky project cards (position:sticky) are not broken by
-                    // residual transforms creating containing blocks.
-                    if (el.style.transform) el.style.transform = '';
-                    if (el.style.opacity && el.style.opacity !== '1') el.style.opacity = '1';
-                };
-
-                // Use motion's inView with once:true — note: inView re-fires
-                // on re-entry, so onComplete handles the cleanup.
-                inView(el, {
-                    once: true,
-                    // The offset format supported by motion's JS path:
-                    // offset: ['start 88%', 'end 95%'] would be typical, but
-                    // for a simple "once on enter" we set top only.
-                    // For the title masks we pass a minimal offset; the
-                    // actual threshold is handled by the CSS/Intersection
-                    // behavior of the caller.
-                    offset: ['start 70%', 'end 90%'],
-                }).then((resolved) => {
-                    // resolved is the animation promise; wait then clean up
-                    resolved.then(() => {
-                        onComplete();
-                        // unobserve so it never fires again
-                        try { el._motionInViewObserver?.disconnect(); } catch {}
-                    });
-                }).catch(() => {
-                    // If inView never triggered (e.g. element never in viewport),
-                    // ensure content is visible and clean up styles.
-                    onComplete();
-                });
-            });
+        const frag = document.createDocumentFragment();
+        text.split(/(\s+)/).forEach((part) => {
+            if (!part) return;
+            if (/^\s+$/.test(part)) {
+                frag.appendChild(document.createTextNode(part));
+                return;
+            }
+            const w = document.createElement('span');
+            w.className = 'w';
+            w.setAttribute('aria-hidden', 'true');
+            const i = document.createElement('i');
+            i.textContent = part; // never innerHTML
+            w.appendChild(i);
+            frag.appendChild(w);
         });
-    }
+        textNode.parentNode.replaceChild(frag, textNode);
+    });
 
-    // -------------------------------------------------------------------------
-    // S3: Counters — animate 4+, 50+, 99.9% from 0 to final value
-    // -------------------------------------------------------------------------
-    function initCounters() {
-        const statValues = document.querySelectorAll('.stat-value');
-        if (!statValues.length) return;
+    el.dataset.split = 'true';
+}
 
-        statValues.forEach((el, i) => {
-            const target = el.textContent.trim(); // e.g. "4+", "50+", "99.9%"
-            const suffix = target.slice(-1);       // "+" or "%"
-            const numStr = target.slice(0, -1);
-            const finalNum = parseFloat(numStr); // e.g. 4, 50, 99.9
+/* --------------------------------------------------------------------------
+ * Section reveals: fade-up with stagger on scroll, once per section.
+ * Titles are excluded — they get the masked reveal above (a transform on the
+ * same element would fight the word split). Sticky project cards are
+ * transformed through their CHILDREN only (.project-index/.project-main):
+ * a transformed .projects-grid or .project-card would break position:sticky.
+ * -------------------------------------------------------------------------- */
+function initSectionReveals() {
+    const revealSelectors = [
+        '.section-tag',
+        '.skill-group',
+        '.service-row',
+        '.project-index',
+        '.project-main',
+        '.timeline-item',
+        '.about-grid > div',
+        '.contact-info',
+        '.contact-form-card',
+        '.experience-aside-inner',
+        '.footer-inner',
+    ];
 
-            // Animate from 0 to finalNum using motion's animate
-            // and display the final string with suffix on complete.
-            const animateEl = el; // the DOM element itself
-            animate(0, finalNum, {
-                duration: 1.8,
-                easing: [0.16, 1, 0.3, 1], // expo-out: snap fast, land soft
+    document.querySelectorAll('section, footer').forEach((section) => {
+        if (section.id === 'home') return; // hero handled on load
+
+        const items = [];
+        revealSelectors.forEach((sel) => {
+            if (sel === '.section-tag') return; // animated with the rule below
+            section.querySelectorAll(sel).forEach((el) => items.push(el));
+        });
+        if (!items.length) return;
+
+        items.forEach((el) => { el.style.opacity = '0'; }); // sync hidden state
+
+        let fired = false;
+        const stop = inView(section, () => {
+            if (fired) return false; // safety net for re-entry
+            fired = true;
+            const controls = animate(items, { opacity: [0, 1], y: [30, 0] }, {
+                duration: 0.7,
+                ease: EASE_POWER2,
+                delay: (i) => i * 0.1,
+            });
+            controls.finished.then(() => {
+                items.forEach((el) => clearInline(el, ['opacity', 'transform']));
+            }).catch(() => {
+                items.forEach((el) => { el.style.opacity = '1'; el.style.transform = ''; });
+            });
+            // returning undefined (not false) → unobserve → fires once
+        }, { amount: 0.2 });
+        if (typeof stop !== 'function' && window.console) {
+            console.warn('animations: inView did not return a stop function.');
+        }
+    });
+}
+
+/* --------------------------------------------------------------------------
+ * Section number rules: the signature hairline draws itself left→right,
+ * then releases its inline transform. (.section-tag rides the same trigger.)
+ * -------------------------------------------------------------------------- */
+function initSecRules() {
+    document.querySelectorAll('section, footer').forEach((section) => {
+        if (section.id === 'home') return; // hero rules stay visible on load
+
+        const rule = section.querySelector('.sec-rule');
+        const tag = section.querySelector('.section-tag');
+        if (!rule && !tag) return;
+
+        if (rule) {
+            rule.style.transformOrigin = 'left';
+            rule.style.transform = 'scaleX(0)'; // sync hidden state
+        }
+        if (tag) tag.style.opacity = '0';
+
+        let fired = false;
+        inView(section, () => {
+            if (fired) return false;
+            fired = true;
+            if (rule) {
+                animate(rule, { scaleX: [0, 1] }, {
+                    duration: 1.0,
+                    ease: EASE_EXPO,
+                }).finished.then(() => clearInline(rule, ['transform']))
+                    .catch(() => { rule.style.transform = ''; });
+            }
+            if (tag) {
+                animate(tag, { opacity: [0, 1], y: [12, 0] }, {
+                    duration: 0.45,
+                    ease: EASE_EXPO,
+                    delay: 0.05,
+                }).finished.then(() => clearInline(tag, ['opacity', 'transform']))
+                    .catch(() => { tag.style.opacity = '1'; tag.style.transform = ''; });
+            }
+        }, { amount: 0.25 });
+    });
+}
+
+/* --------------------------------------------------------------------------
+ * Animated counters: 4+, 50+, 99.9% — suffixes stay in the DOM.
+ * .stat-value is never split into words (counters rewrite textContent).
+ * -------------------------------------------------------------------------- */
+function initCounters() {
+    document.querySelectorAll('.stat-value').forEach((el) => {
+        const raw = el.textContent.trim();
+        const match = raw.match(/^([\d.]+)(.*)$/);
+        if (!match) return;
+        const target = parseFloat(match[1]);
+        const suffix = match[2]; // "+" or "%" etc.
+        const decimals = (match[1].split('.')[1] || '').length;
+
+        el.textContent = (0).toFixed(decimals) + suffix; // sync initial value
+
+        let fired = false;
+        inView(el, () => {
+            if (fired) return false;
+            fired = true;
+            animate(0, target, {
+                duration: 1.6,
+                ease: EASE_POWER2,
                 onUpdate: (val) => {
-                    // Format: keep decimal if needed, then append suffix
-                    let disc = val.toFixed(suffix === '%' ? 1 : 0);
-                    if (suffix === '%') disc += '%';
-                    else if (suffix === '+') disc += '+';
-                    animateEl.textContent = disc;
+                    el.textContent = val.toFixed(decimals) + suffix;
                 },
                 onComplete: () => {
-                    // Ensure the exact final string stays (defense against
-                    // floating drift). The suffix is already appended in onUpdate
-                    // but we reset it cleanly here.
-                    if (suffix === '%') animateEl.textContent = '99.9%';
-                    else if (suffix === '+') animateEl.textContent = '4+';
-                    else animateEl.textContent = '50+';
+                    el.textContent = target.toFixed(decimals) + suffix;
                 },
             });
+        }, { amount: 0.8 });
+    });
+}
+
+/* --------------------------------------------------------------------------
+ * Timeline line: scaleY draw on scroll (scroll-linked, not time-based).
+ * JS-path scroll callback — deterministic across browsers, Lenis-compatible.
+ * -------------------------------------------------------------------------- */
+function initTimelineDraw() {
+    document.querySelectorAll('.timeline-line').forEach((line) => {
+        line.style.transformOrigin = 'top center';
+        line.style.transform = 'scaleY(0)'; // sync hidden state
+
+        scroll((progress) => {
+            line.style.transform = 'scaleY(' + Math.min(Math.max(progress, 0), 1) + ')';
+        }, {
+            target: line.parentElement,
+            offset: ['start 70%', 'end 60%'],
         });
-    }
+    });
+}
 
-    // -------------------------------------------------------------------------
-    // S4: Scroll progress bar (thin lime bar under header)
-    // -------------------------------------------------------------------------
-    function initProgressBar() {
-        // Only create if not reduced motion and motion is available
-        if (!('scrollInfo' in window)) return;
+/* --------------------------------------------------------------------------
+ * Scroll progress hairline under the header. The element is JS-created in a
+ * JS-gated path, so it can never exist without animation capability.
+ * -------------------------------------------------------------------------- */
+function initProgressBar() {
+    if (document.getElementById('progress-bar')) return;
+    const header = document.querySelector('.site-header');
+    if (!header) return;
 
-        // Check if already created
-        if (document.getElementById('progress-bar')) return;
+    const bar = document.createElement('div');
+    bar.id = 'progress-bar';
+    bar.setAttribute('aria-hidden', 'true');
+    bar.style.position = 'absolute';
+    bar.style.insetInline = '0';
+    bar.style.bottom = '-1px';
+    bar.style.height = '2px';
+    bar.style.background = 'var(--accent)';
+    bar.style.transform = 'scaleX(0)';
+    bar.style.transformOrigin = 'left';
+    bar.style.zIndex = '99';
+    bar.style.pointerEvents = 'none';
+    header.appendChild(bar);
 
-        const bar = document.createElement('div');
-        bar.id = 'progress-bar';
-        Object.assign(bar.style, {
-            position: 'absolute',
-            insetInline: '0',
-            bottom: '-1px',
-            height: '2px',
-            background: 'var(--accent)',
-            transformOrigin: 'left',
-            scaleX: 0,
-            zIndex: '99',
-            transition: 'transform .1s linear',
-            pointerEvents: 'none',
-        });
-        // Insert after the header, before the first section
-        const header = document.querySelector('.site-header');
-        if (header) header.parentNode.insertBefore(bar, header.nextSibling);
-
-        // Drive via scrollInfo — internally rAF-throttled, transform only
-        // We use motion's scroll() which fires on native scroll events.
-        // The progress value p goes from 0 to 1 across the document height.
-        scroll(
-            () => {
-                // Compute progress: how far scrolled relative to document height
-                // using the scrollInfo range that motion provides internally.
-                // For simplicity, we compute it manually from the scrollY and
-                // documentElement scrollHeight. This keeps it independent of
-                // the internal motion API nuances.
-                const scrollY = window.scrollY || document.documentElement.scrollY;
-                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-                const p = docHeight > 0 ? Math.min(Math.max(scrollY / docHeight, 0), 1) : 0;
-                bar.style.transform = `scaleX(${p})`;
-            }
-        );
-    }
-
-    // -------------------------------------------------------------------------
-    // INITIALIZE: run all features in order
-    // -------------------------------------------------------------------------
-    // Hero load-in runs on page load (no scroll trigger needed)
-    initHero();
-
-    // Section reveals — after fonts are ready (the original had a
-    // document.fonts.ready + ScrollTrigger.refresh dance; motion's inView
-    // is IntersectionObserver-based so we can run it immediately. The 2500ms
-    // failsafe below ensures titles never stay hidden.
-    initSectionReveals();
-
-    // Helper: ensure titles are visible within 2500ms even if inView never
-    // triggered (e.g. very short page, or the observer missed it).
-    setTimeout(() => {
-        document.querySelectorAll('.hero-title, .section-title, .contact-title, .experience-title').forEach(el => {
-            if (el.style.opacity === '' || parseFloat(el.style.opacity) < 1) {
-                el.style.opacity = '1';
-                el.style.transform = '';
-            }
-        });
-    }, 2500);
-
-    // Counters — they should trigger when the stats section enters viewport.
-    // We use inView for "once" with a reasonable offset.
-    const statObserverTargets = document.querySelectorAll('.hero-stats');
-    if (statObserverTargets.length) {
-        statObserverTargets.forEach(el => {
-            inView(el, { once: true, offset: ['start 70%', 'end 95%'] }).then(() => {
-                initCounters();
-            }).catch(() => {
-                // Fallback: show counters immediately if observer never fires
-                initCounters();
-            });
-        });
-    }
-
-    // Progress bar
-    initProgressBar();
+    scroll((progress) => {
+        bar.style.transform = 'scaleX(' + Math.min(Math.max(progress, 0), 1) + ')';
+    });
 }

@@ -185,13 +185,21 @@ function filterBlockedErrors(errors) {
         await page.goto(BASE, { waitUntil: 'networkidle2', timeout: 60000 });
         await sleep(3500);
 
+        /* Section titles are scroll-triggered (motion inView, amount 0.3):
+         * bring the first one well into view before asserting visibility. */
+        await page.evaluate(() => {
+            document.querySelector('.section-title')
+                ?.scrollIntoView({ block: 'center', behavior: 'instant' });
+        });
+        await sleep(1800);
+
         const state = await page.evaluate(() => ({
             words: document.querySelectorAll('.w').length,
             heroTitleOpacity: getComputedStyle(document.querySelector('.hero-title')).opacity,
             sectionTitleOpacity: getComputedStyle(document.querySelector('.section-title')).opacity,
             hasCursor: document.documentElement.classList.contains('has-cursor'),
             cursorEls: document.querySelectorAll('.cursor-dot, .cursor-ring').length,
-            lenis: document.documentElement.classList.contains('lenis-active'),
+            lenis: document.documentElement.classList.contains('lenis'),
             marqueeAnim: getComputedStyle(document.querySelector('.marquee-track')).animationName,
             grainAnim: getComputedStyle(document.body, '::after').animationName,
             time: (document.getElementById('local-time') || {}).textContent,
@@ -371,8 +379,10 @@ function filterBlockedErrors(errors) {
 
     /* ---------------- E. ALL CDNs + animation module blocked ---------------- */
     /* Blocks every cross-origin request (fonts, icons, every JS CDN) AND the
-     * local animations.js (+ any local motion/gsap vendor bundle). The real
-     * contract: whatever fails to load, every text node stays visible. */
+     * local animations.js (+ the local motion vendor bundle). Vendored Lenis
+     * is a LOCAL file, so it may still load here — that is by design. The
+     * contract: whatever fails to load, every text node stays visible and
+     * scrolling keeps working (Lenis or native fallback). */
     const secE = () => withRetry('E. all CDNs + animation module blocked', async () => {
         const { page, errors } = await newPage(browser, { blockExternal: true });
         await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 60000 });
@@ -383,7 +393,7 @@ function filterBlockedErrors(errors) {
                 .every((t) => getComputedStyle(t).opacity === '1'),
             words: document.querySelectorAll('.w').length,
             statValues: [...document.querySelectorAll('.stat-value')].map((e) => e.textContent),
-            lenis: document.documentElement.classList.contains('lenis-active'),
+            lenis: document.documentElement.classList.contains('lenis'),
         }));
         const eHidden = await page.evaluate(scriptHiddenText);
         check('CDN-block: hero visible', r.hero === '1', r.hero);
@@ -392,7 +402,14 @@ function filterBlockedErrors(errors) {
         check('CDN-block: no partial word split', r.words === 0, String(r.words));
         check('CDN-block: counters show final strings',
             JSON.stringify(r.statValues) === JSON.stringify(['4+', '50+', '99.9%']), JSON.stringify(r.statValues));
-        check('CDN-block: lenis skipped (CDN down)', r.lenis === false);
+        /* Vendored lenis (local file) is NOT blocked, so it may legitimately
+         * initialise here. The real contract is that scrolling works either
+         * way — Lenis window mode or native fallback. */
+        await page.evaluate(() => window.scrollTo({ top: 900, behavior: 'instant' }));
+        const scrolledY = await settleScroll(page, 900);
+        check('CDN-block: scrolling works (vendored lenis or native)', scrolledY > 100,
+            `lenis=${r.lenis} scrollY=${scrolledY}`);
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
         const real = filterBlockedErrors(errors);
         check('CDN-block: no unrelated errors', real.length === 0, real.slice(0, 4).join(' | '));
         await page.close();
@@ -410,7 +427,7 @@ function filterBlockedErrors(errors) {
             marquee: getComputedStyle(document.querySelector('.marquee-track')).animationName,
             grain: getComputedStyle(document.body, '::after').animationName,
             cursor: document.documentElement.classList.contains('has-cursor'),
-            lenis: document.documentElement.classList.contains('lenis-active'),
+            lenis: document.documentElement.classList.contains('lenis'),
             scrollBehavior: getComputedStyle(document.documentElement).scrollBehavior,
             canvasHidden: document.getElementById('bg-canvas').style.display === 'none',
             time: document.getElementById('local-time').textContent,
