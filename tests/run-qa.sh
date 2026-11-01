@@ -9,9 +9,11 @@
 # Section B is split per width because headed Chrome exits when its last
 # window closes — a process must never open a second page after closing one.
 #
-# Requirements: node >= 18, google-chrome (CHROME_PATH to override), a local
-# X display (QA_DISPLAY, default :0), and puppeteer-core resolvable (either on
-# NODE_PATH / installed normally, PUPPETEER_CORE_PATH, or /tmp/opencode).
+# Requirements: node >= 18, google-chrome (CHROME_PATH to override), and
+# puppeteer-core resolvable. Runs HEADLESS by default (no windows open); set
+# QA_HEADED=1 to run on a local X display instead (QA_DISPLAY, default :0).
+# Puppeteer-core resolves via NODE_PATH / installed normally,
+# PUPPETEER_CORE_PATH, or /tmp/opencode.
 # The QA port defaults to 8123 (QA_PORT to override).
 set -u
 

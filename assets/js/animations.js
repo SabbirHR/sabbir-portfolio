@@ -154,7 +154,7 @@ function initMaskedReveals() {
             delay,
         }).finished.then(() => {
             el.style.opacity = '';
-        }).catch(() => { el.style.opacity = '1'; });
+        }).catch(() => { el.style.opacity = ''; }); // final state = stylesheet governs
 
         if (!words || !words.length) return;
         const list = Array.from(words);
@@ -180,13 +180,15 @@ function initMaskedReveals() {
         });
     }
 
-    if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(reveal).catch(reveal);
-        // Failsafe: never leave a title stuck at opacity 0.
-        window.setTimeout(reveal, 2500);
-    } else {
-        reveal();
-    }
+    /* Reveal immediately — the module is a deferred <script type="module">,
+     * so running now is already after first paint. Deliberately NOT gated on
+     * document.fonts.ready: the hero is above-the-fold content and hiding it
+     * behind network-font timing turned out to be flaky (G job). The word
+     * spans auto-size, so a mid-flight font swap only shifts layout, never
+     * breaks the transforms. The 2500ms failsafe below is kept for the split
+     * path: titles can never stay hidden. */
+    reveal();
+    window.setTimeout(reveal, 2500); // idempotent (done-guard)
 }
 
 /**

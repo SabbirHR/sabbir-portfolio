@@ -1,10 +1,17 @@
 /* Browser smoke-QA harness for the portfolio (see tests/run-qa.sh).
  *
- * Runs HEADED on the local X display: chrome-headless-shell reports
- * pointer:none, which would falsely fail the pointer:fine gates (custom
- * cursor, animated grain). The local display occasionally detaches renderer
- * frames, so every section runs inside withRetry (partial results rolled
- * back, pages from the failed attempt closed, up to 3 attempts).
+ * Runs HEADLESS by default — no windows are opened on the user's desktop.
+ * Limitation: this Chrome build reports pointer:none / hover:none even in
+ * modern headless mode (CDP cannot emulate pointer features either), which
+ * would fail the pointer:fine gates (custom cursor, magnetic buttons). The
+ * newPage() shim therefore answers ONLY those two media queries as
+ * fine/hover in headless mode; everything else (reduced-motion, JS, network,
+ * WebGL) is exercised for real. Set QA_HEADED=1 to watch a run on the local
+ * X display with completely native pointer semantics.
+ *
+ * The local display occasionally detaches renderer frames, so every section
+ * runs inside withRetry (partial results rolled back, pages from the failed
+ * attempt closed, up to 3 attempts).
  *
  * Sections:
  *   A   default desktop @1440 (reveals, cursor, lenis, sticky, anchors)
@@ -53,6 +60,11 @@ const PORT = Number(process.env.QA_PORT) || 8123;
 const BASE = `http://localhost:${PORT}/`;
 const BASE_ORIGIN = new URL(BASE).origin;
 const CHROME = process.env.CHROME_PATH || '/usr/bin/google-chrome';
+/* QA_HEADED=1 → run on the local X display with native pointer semantics.
+ * Default (headless) answers 'pointer: fine' / 'hover: hover' via the
+ * newPage() shim so no windows open on the user's desktop. */
+const HEADED = process.env.QA_HEADED === '1';
+const HEADLESS = !HEADED;
 
 const results = [];
 function check(name, ok, detail) {
@@ -101,6 +113,29 @@ async function newPage(browser, { width = 1440, height = 900, js = true, reduced
     await page.setViewport({ width, height });
     if (!js) await page.setJavaScriptEnabled(false);
     if (reduced) await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    if (HEADLESS) {
+        /* Headless Chrome reports pointer:none + hover:none and CDP cannot
+         * emulate those two features. The gates under test (cursor layer,
+         * magnetic buttons) are exact matches on '(pointer: fine)' and
+         * '(hover: hover)', so answer ONLY those queries as true and pass
+         * everything else to the real matchMedia untouched. Documented
+         * trade-off — set QA_HEADED=1 for fully native semantics. */
+        await page.evaluateOnNewDocument(() => {
+            const native = window.matchMedia.bind(window);
+            window.matchMedia = (query) => {
+                if (/\(\s*pointer\s*:\s*fine\s*\)/.test(query) ||
+                    /\(\s*hover\s*:\s*hover\s*\)/.test(query)) {
+                    return {
+                        matches: true, media: query, onchange: null,
+                        addEventListener() {}, removeEventListener() {},
+                        addListener() {}, removeListener() {},
+                        dispatchEvent() { return false; },
+                    };
+                }
+                return native(query);
+            };
+        });
+    }
     if (noWebGL) {
         await page.evaluateOnNewDocument(() => {
             const orig = HTMLCanvasElement.prototype.getContext;
@@ -175,7 +210,7 @@ function filterBlockedErrors(errors) {
 (async () => {
     const browser = await puppeteer.launch({
         executablePath: CHROME,
-        headless: false,
+        headless: !HEADED,
         args: ['--no-sandbox', '--disable-dev-shm-usage', '--no-first-run', '--no-default-browser-check', '--window-size=1440,900'],
     });
 

@@ -1,7 +1,9 @@
 /* ==========================================================================
-   Neo-Technical Editorial — design system (sabbir-portfolio)
+   Wireframe Console — design system (sabbir-portfolio)
+   (Neo-Technical Editorial, evolved: blueprint grids, scanlines, registration
+   marks and a monospace heading voice on the same near-black/bone/lime tokens)
 
-   Fonts: Space Grotesk (display/body) + Fira Code (labels/code only).
+   Fonts: Space Grotesk (display/body) + Fira Code (labels/headings/code).
    They are loaded with <link> tags in index.html <head> — never @import
    here, @import would serialise the font request behind this file.
 
@@ -84,6 +86,12 @@ html.lenis {
 body {
     margin: 0;
     background-color: var(--bg);
+    /* Blueprint grid: the site-wide substrate — two 1px hairline gradients,
+     * faint enough to read as paper, not obstruction. Decorative CSS only. */
+    background-image:
+        linear-gradient(rgba(237, 237, 237, .024) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(237, 237, 237, .024) 1px, transparent 1px);
+    background-size: 112px 112px;
     color: var(--ink);
     font-family: 'Space Grotesk', system-ui, sans-serif;
     font-size: var(--t-body);
@@ -179,6 +187,18 @@ select {
     margin-bottom: clamp(2rem, 5vh, 3rem);
 }
 
+/* Registration mark: a small mono "+" at the end of every section header
+ * rule — the blueprint sheet alignment cue. Decorative, CSS-only. */
+.sec-head::after {
+    content: '+';
+    margin-left: auto;
+    color: var(--ink-4);
+    font-family: 'Fira Code', monospace;
+    font-size: var(--t-micro);
+    line-height: 1;
+    user-select: none;
+}
+
 .sec-index {
     font-family: 'Fira Code', monospace;
     font-size: var(--t-micro);
@@ -199,9 +219,22 @@ select {
     margin-bottom: clamp(2.5rem, 6vh, 4.5rem);
 }
 
+/* Console headings: section titles switch to the mono voice at a tighter
+ * scale — the Wireframe Console signature type move. The lime "+" prefix is
+ * a registration mark via the pseudo layer (never part of the word split,
+ * which only wraps real text nodes). */
 .section-title {
-    font-size: var(--t-title);
+    font-family: 'Fira Code', monospace;
+    font-size: clamp(1.75rem, 1rem + 2.4vw, 2.55rem);
+    font-weight: 500;
+    letter-spacing: -.015em;
+    line-height: 1.12;
     margin-top: 1rem;
+}
+
+.section-title::before {
+    content: "+ ";
+    color: var(--accent);
 }
 
 /* --------------------------------------------------------------------------
@@ -459,12 +492,29 @@ select {
     inset: 0;
     z-index: 0;
     pointer-events: none;
+    /* Fill layers + the hero's finer LIME blueprint grid (56px cells) — the
+     * grid rides the same ::before so it lives UNDER the WebGL canvas and
+     * participates in the no-WebGL fallback contract (radial + svg kept). */
     background-image:
         radial-gradient(58% 54% at 70% 46%, rgba(200, 255, 47, .06), rgba(200, 255, 47, 0) 70%),
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23g)' opacity='0.05'/%3E%3C/svg%3E");
-    background-size: auto, 240px 240px;
-    background-repeat: no-repeat, repeat;
-    background-position: center, 0 0;
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23g)' opacity='0.05'/%3E%3C/svg%3E"),
+        linear-gradient(rgba(200, 255, 47, .05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200, 255, 47, .05) 1px, transparent 1px);
+    background-size: auto, 240px 240px, 56px 56px, 56px 56px;
+    background-repeat: no-repeat, repeat, repeat, repeat;
+    background-position: center, 0 0, 0 0, 0 0;
+}
+
+/* CRT scanlines over the hero fill/canvas (static, faint, below content). */
+.hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: repeating-linear-gradient(0deg,
+        rgba(237, 237, 237, .03) 0 1px, transparent 1px 4px);
+    opacity: .6;
 }
 
 #bg-canvas {
@@ -929,7 +979,11 @@ select {
 }
 
 .experience-title {
-    font-size: var(--t-title);
+    font-family: 'Fira Code', monospace;
+    font-size: clamp(1.6rem, 1rem + 2vw, 2.3rem);
+    font-weight: 500;
+    letter-spacing: -.015em;
+    line-height: 1.12;
     margin-top: 1rem;
     margin-bottom: 1.25rem;
 }
@@ -1140,9 +1194,12 @@ select {
 }
 
 .contact-title {
-    font-size: var(--t-title);
+    font-family: 'Fira Code', monospace;
+    font-size: clamp(1.6rem, 1rem + 2vw, 2.3rem);
+    font-weight: 500;
+    letter-spacing: -.015em;
     margin-bottom: 2.5rem;
-    line-height: 1.04;
+    line-height: 1.12;
 }
 
 .contact-info {
@@ -1187,6 +1244,31 @@ select {
     border: 1px solid var(--hairline);
     padding: clamp(1.5rem, 4vw, 2.5rem);
     position: relative;
+}
+
+/* Blueprint corner ticks: registration L-marks on the two opposite corners.
+ * Pseudo-elements carry NO transforms (sticky-safe by construction). */
+.contact-form-card::before,
+.contact-form-card::after {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    pointer-events: none;
+}
+
+.contact-form-card::before {
+    top: -1px;
+    left: -1px;
+    border-top: 1px solid var(--accent);
+    border-left: 1px solid var(--accent);
+}
+
+.contact-form-card::after {
+    bottom: -1px;
+    right: -1px;
+    border-bottom: 1px solid var(--accent);
+    border-right: 1px solid var(--accent);
 }
 
 .form-title {
@@ -1402,9 +1484,9 @@ textarea.form-control {
 }
 
 /* --------------------------------------------------------------------------
-   15. Film grain — one static SVG noise layer on body::after (no JS drawing)
-       Animated only for fine pointers; disabled under reduced motion; paused
-       via body.is-hidden (toggled on document.hidden in main.js).
+   15. Film grain — one static SVG noise layer on body::after (no JS drawing).
+       Animation is gated on html.has-cursor (see the gate note below);
+       paused via body.is-hidden (toggled on document.hidden in main.js).
    -------------------------------------------------------------------------- */
 body::after {
     content: "";
@@ -1420,11 +1502,14 @@ body::after {
     background-position: 0 0;
 }
 
-/* ~12fps: 8 discrete jumps across .667s */
-@media (pointer: fine) {
-    body::after {
-        animation: grain-shift .667s steps(8) infinite;
-    }
+/* ~12fps: 8 discrete jumps across .667s. Gated on html.has-cursor, the JS
+ * capability class (cursor.js only adds it for pointer:fine + reduced-motion
+ * false + rAF available) — same gate, but portable: CSS media queries cannot
+ * be driven by test tooling, and tying grain to the same runtime signal
+ * keeps every animated layer behind one verified gate. No JS (touch,
+ * reduced motion, cursor.js failure) → static film grain. */
+html.has-cursor body::after {
+    animation: grain-shift .667s steps(8) infinite;
 }
 
 body.is-hidden::after {
