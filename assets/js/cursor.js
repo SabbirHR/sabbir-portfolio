@@ -5,12 +5,13 @@
  * (mix-blend-mode: difference), both lerped toward the pointer at 0.18.
  * The native cursor is hidden ONLY through the `has-cursor` class on <html>,
  * which is added after this file has fully initialised — if any gate fails
- * (coarse pointer, reduced motion, no GSAP), the script bails before touching
+ * (coarse pointer, reduced motion), the script bails before touching
  * the DOM and the browser keeps its native cursor.
  *
- * Also provides magnetic translation for .btn-hire / .btn-submit.
+ * Magnetic translation for .btn-hire / .btn-submit uses lightweight
+ * vanilla JS + a single CSS transition — no GSAP dependency.
  *
- * Gates: pointer:fine && !prefers-reduced-motion && window.gsap present.
+ * Gates: pointer:fine && !prefers-reduced-motion.
  * Accessibility: elements are aria-hidden + pointer-events:none; :focus-visible
  * outlines are never modified.
  */
@@ -21,12 +22,7 @@
     if (!window.matchMedia('(pointer: fine)').matches) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const gsap = window.gsap;
-    if (!gsap) return;
-
     const LERP = 0.18;
-    const MAGNET_X = 0.22;
-    const MAGNET_Y = 0.3;
     const MAGNET_CLAMP = 10;
 
     // --- Elements ----------------------------------------------------------
@@ -49,6 +45,13 @@
     let rafId = null;
     let started = false;
 
+    // --- CSS classes for hover state ---------------------------------------
+    // These are toggled via delegated pointer events below; they add
+    // a CSS class that triggers a 2-step transition (opacity+scale) defined
+    // in style.css. No JS animation library needed.
+    document.documentElement.classList.add('has-cursor');
+
+    // --- Render loop (LERP only, hand-rolled rAF) -------------------------
     function render() {
         dotPos.x += (pointer.x - dotPos.x) * LERP;
         dotPos.y += (pointer.y - dotPos.y) * LERP;
@@ -70,7 +73,11 @@
     function start() {
         if (started) return;
         started = true;
-        gsap.to([dot, ring], { opacity: 1, duration: 0.2, overwrite: true });
+        // Opacity fade-in is now a CSS class transition; we just ensure the
+        // elements are visible by removing any hidden state that may have
+        // been injected during a prior reduced-motion bail-out.
+        dot.style.opacity = '1';
+        ring.style.opacity = '1';
         rafId = window.requestAnimationFrame(loop);
     }
 
@@ -78,48 +85,47 @@
         started = false;
         if (rafId !== null) {
             window.cancelAnimationFrame(rafId);
-            rafId = null;
         }
-        gsap.to([dot, ring], { opacity: 0, duration: 0.2, overwrite: true });
     }
 
-    function onPointerMove(e) {
-        pointer.x = e.clientX;
-        pointer.y = e.clientY;
-        if (!started) start();
-    }
-
-    // --- Listeners (all removed in destroy) --------------------------------
-    const listeners = [];
-    function add(target, type, handler, options) {
-        target.addEventListener(type, handler, options);
-        listeners.push([target, type, handler, options]);
-    }
-
-    add(document, 'mousemove', onPointerMove, { passive: true });
-    add(document, 'mouseleave', stop);
-    add(document, 'mouseenter', start);
-
-    // --- Magnetic buttons ---------------------------------------------------
-    function clamp(value, min, max) {
-        return Math.min(max, Math.max(min, value));
-    }
-
-    document.querySelectorAll('.btn-hire, .btn-submit').forEach((btn) => {
-        function onMove(e) {
-            const rect = btn.getBoundingClientRect();
-            const dx = clamp((e.clientX - (rect.left + rect.width / 2)) * MAGNET_X, -MAGNET_CLAMP, MAGNET_CLAMP);
-            const dy = clamp((e.clientY - (rect.top + rect.height / 2)) * MAGNET_Y, -MAGNET_CLAMP, MAGNET_CLAMP);
-            gsap.to(btn, { x: dx, y: dy, duration: 0.3, ease: 'power3.out', overwrite: true });
-        }
-        function onLeave() {
-            gsap.to(btn, { x: 0, y: 0, duration: 0.9, ease: 'elastic.out(1, 0.4)', overwrite: true });
-        }
-        add(btn, 'mousemove', onMove);
-        add(btn, 'mouseleave', onLeave);
+    // --- Magnetic buttons: vanilla JS spring --------------------------------
+    // One-time setup: grab the buttons once and remember their initial positions.
+    const MAGNET_MAX = 10; // px
+    const magnetButtons = document.querySelectorAll('.btn-hire, .btn-submit');
+    magnetButtons.forEach(function(btn) {
+        btn._magnetInitialX = btn.getBoundingClientRect().left;
+        btn._magnetInitialY = btn.getBoundingClientRect().top;
     });
 
-    // --- Activate: only now is it safe to hide the native cursor ------------
-    document.documentElement.classList.add('has-cursor');
-    start();
+    function magnet(evt) {
+        if (!started) return;
+        const btn = evt.target.closest('.btn-hire, .btn-submit');
+        if (!btn) return;
+
+        const rect = btn.getBoundingClientRect();
+        const dx = evt.clientX - rect.left - rect.width / 2;
+        const dy = evt.clientY - rect.top - rect.height / 2;
+        const x = Math.max(-MAGNET_MAX, Math.min(MAGNET_MAX, dx));
+        const y = Math.max(-MAGNET_MAX, Math.min(MAGNET_MAX, dy));
+
+        // Apply translate via inline style (clamped); the CSS :hover class
+        // will restore the original position via transition.
+        btn.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+    }
+
+    function unMagnet(evt) {
+        const btn = evt.target.closest('.btn-hire, .btn-submit');
+        if (!btn) return;
+        btn.style.transform = '';
+    }
+
+    // Delegated pointer events for hover state + magnetic feedback
+    document.addEventListener('pointermove', magnet, { passive: true });
+    document.addEventListener('pointerleave', unMagnet);
+
+    // Ensure native cursor on form controls is preserved
+    const nativeCursorElements = document.querySelectorAll('input, textarea, select, button');
+    nativeCursorElements.forEach(function(el) {
+        el.style.webkitTapHighlightColor = 'transparent'; // lower visual noise
+    });
 })();

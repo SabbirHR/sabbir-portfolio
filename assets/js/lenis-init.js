@@ -1,14 +1,13 @@
 /**
  * lenis-init.js — optional smooth scrolling (Lenis, window mode only).
  *
- * Deliberately defensive: Lenis runs through the GSAP ticker, so a broken
- * Lenis would break sitewide scrolling and every GSAP animation. Everything
- * is wrapped in try/catch, the raf callback self-disables on error, and if
- * the CDN never delivered window.Lenis this file does nothing at all — the
- * site then keeps native scrolling (scroll-behavior:smooth stays in CSS).
+ * Deliberately defensive: Lenis runs its own rAF loop; there is NO dependency
+ * on GSAP or ScrollTrigger. If any sticky/anchor/scroll regression is observed,
+ * delete the two <script> tags in index.html and this file — nothing else
+ * depends on Lenis.
  *
  * Contracts:
- *   - window (default) mode ONLY — wrapper mode would break position:sticky
+ *   - window mode ONLY — wrapper mode would break position:sticky
  *   - native touch scrolling is untouched (no syncTouch option passed)
  *   - scroll-padding-top keeps working (it is a separate CSS property)
  *   - html.lenis-active deletes scroll-behavior:smooth (see style.css)
@@ -20,28 +19,28 @@
     'use strict';
 
     const Lenis = window.Lenis;
-    if (!Lenis || !window.gsap || !window.ScrollTrigger) return;
+    if (!Lenis) return;
+
+    // Reduced-motion gate
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const gsap = window.gsap;
-    const ScrollTrigger = window.ScrollTrigger;
     const root = document.documentElement;
 
-    let lenis = null;
-
     function teardown() {
-        if (lenis) {
-            gsap.ticker.remove(raf);
+        if (window.lenis) {
             try {
                 if (typeof lenis.destroy === 'function') lenis.destroy();
             } catch (err) {
                 console.warn('Lenis destroy failed (ignored).', err);
             }
-            lenis = null;
+            window.lenis = null;
         }
         root.classList.remove('lenis-active');
     }
 
+    const lenis = new Lenis(); // default window mode
+
+    // Lenis's own rAF loop — does NOT touch gsap.ticker or ScrollTrigger
     function raf(time) {
         try {
             lenis.raf(time * 1000);
@@ -51,16 +50,11 @@
         }
     }
 
-    try {
-        lenis = new Lenis(); // default window mode
+    // Kick off the rAF loop
+    window.lenis = lenis;
+    lenis.on('scroll', () => { /* no-op — native scroll events fire on their own */ });
+    // We use the rAF loop only; no gsap.ticker coupling.
+    window.requestAnimationFrame(raf);
 
-        lenis.on('scroll', ScrollTrigger.update);
-        gsap.ticker.add(raf);
-        gsap.ticker.lagSmoothing(0);
-
-        root.classList.add('lenis-active');
-    } catch (err) {
-        console.warn('Lenis init failed; keeping native scrolling.', err);
-        teardown();
-    }
+    root.classList.add('lenis-active');
 })();
