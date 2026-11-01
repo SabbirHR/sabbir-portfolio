@@ -14,6 +14,9 @@
  *   - failed init runs the bootstrap below that hides the canvas.
  * Extras: webglcontextlost / webglcontextrestored (Android drops contexts on
  * backgrounding) and a reduced-motion path that renders ONE static frame.
+ * An IntersectionObserver on .hero pauses the render loop entirely while the
+ * hero is off-screen; a passive scroll listener (store-only) drives a lerped
+ * scroll-exit effect (mesh sinks, tilts and dims) consumed inside tick().
  *
  * Noise: inline Ashima Arts / Stefan Gustavson simplex noise (MIT) — no
  * addons, no post-processing, no render targets.
@@ -171,11 +174,23 @@ class PortfolioScene {
         this.contextLost = false;
         this.halfW = 6;
         this.halfH = 4;
+        // Hero exit state: the scroll listener only STORES scrollY (no DOM
+        // reads); tick() consumes it through a 0.08 lerp, so re-entry never
+        // pops and the loop is fully stopped while the hero is off-screen.
+        this.heroEl = null;
+        this.heroVisible = true;
+        this.heroHeight = 0;
+        this.scrollY = window.scrollY;
+        this.scrollProgress = 0;
+        this.baseRotZ = 0.12;
+        this.baseDim = 1.0; // set from the mobile base in buildSheet()
         this._onResize = this.onResize.bind(this);
         this._onMouseMove = this.onMouseMove.bind(this);
         this._onVisibility = this.onVisibility.bind(this);
         this._onContextLost = this.onContextLost.bind(this);
         this._onContextRestored = this.onContextRestored.bind(this);
+        this._onScroll = this.onScroll.bind(this);
+        this._onHeroVisibility = this.onHeroVisibility.bind(this);
         this._tick = this.tick.bind(this);
     }
 
@@ -224,11 +239,12 @@ class PortfolioScene {
     buildSheet() {
         const segments = this.mobile ? 96 : 160;
         this.geometry = new THREE.PlaneGeometry(7, 7, segments, segments);
+        this.baseDim = this.mobile ? 0.6 : 1.0;
         this.uniforms = {
             uTime: { value: 0 },
             uMouse: { value: new THREE.Vector2(0, 0) },
             uAmp: { value: this.mobile ? 0.7 : 1.1 },
-            uDim: { value: this.mobile ? 0.6 : 1.0 },
+            uDim: { value: this.baseDim },
             uDark: { value: new THREE.Color(0x050505) },
             uLime: { value: new THREE.Color(0xc8ff2f) },
             uBone: { value: new THREE.Color(0xe9e6dc) },
@@ -258,6 +274,34 @@ class PortfolioScene {
         if (!this.mobile && !this.reduced) {
             window.addEventListener('mousemove', this._onMouseMove, { passive: true });
         }
+        // Hero exit: passive scroll listener only STORES scrollY (no DOM reads
+        // here); tick() consumes it. IntersectionObserver pauses the loop
+        // entirely once the hero is off-screen (reduced-motion never loops).
+        window.addEventListener('scroll', this._onScroll, { passive: true });
+        if (!this.reduced && 'IntersectionObserver' in window) {
+            this.heroEl = document.querySelector('.hero');
+            if (this.heroEl) {
+                this.heroHeight = this.heroEl.offsetHeight;
+                this.heroObserver = new IntersectionObserver(this._onHeroVisibility, {
+                    threshold: 0,
+                    rootMargin: '0px',
+                });
+                this.heroObserver.observe(this.heroEl);
+            }
+        }
+    }
+
+    /** Scroll handler: store-only (passive, no DOM reads) for the tick loop. */
+    onScroll() {
+        this.scrollY = window.scrollY;
+    }
+
+    /** Pause the render loop when the hero is fully off-screen; resume on re-entry. */
+    onHeroVisibility(entries) {
+        const entry = entries[entries.length - 1];
+        this.heroVisible = !!entry && entry.isIntersecting;
+        if (this.heroVisible) this.start(); // start() re-checks hidden/contextLost
+        else this.stop();
     }
 
     onMouseMove(e) {
@@ -288,6 +332,9 @@ class PortfolioScene {
         this.halfH = halfH;
         this.halfW = halfH * this.camera.aspect;
 
+        // Cache the hero height for the scroll-exit math (read here, not in tick)
+        if (this.heroEl) this.heroHeight = this.heroEl.offsetHeight;
+
         if (this.reduced) this.renderFrame();
     }
 
@@ -313,7 +360,9 @@ class PortfolioScene {
      * Render loop
      * ------------------------------------------------------------------ */
     start() {
-        if (this.running || this.contextLost || document.hidden) return;
+        // heroVisible gates every start path (init, visibilitychange, context
+        // restore, observer): no renders while the hero is fully off-screen.
+        if (this.running || this.contextLost || document.hidden || !this.heroVisible) return;
         this.running = true;
         this.clock.getDelta();
         this._tick();
@@ -330,6 +379,19 @@ class PortfolioScene {
         this.renderer.render(this.scene, this.camera);
     }
 
+    /** Scroll-exit: sink, tilt and dim the sheet as the hero leaves the
+     * viewport. heroProgress is lerped at 0.08 so re-entry resumes without a
+     * visual pop (the loop restarts while progress is still ≈1 and eases back). */
+    applyScrollExit() {
+        const height = this.heroHeight || window.innerHeight;
+        const target = clamp(this.scrollY / height, 0, 1);
+        this.scrollProgress += (target - this.scrollProgress) * 0.08;
+        const p = this.scrollProgress;
+        this.mesh.position.y = -p * 0.6;
+        this.mesh.rotation.z = this.baseRotZ + p * 0.05;
+        this.uniforms.uDim.value = this.baseDim * (1 - p * 0.8);
+    }
+
     tick() {
         if (!this.running) return;
         this.rafId = requestAnimationFrame(this._tick); // bound in constructor
@@ -337,6 +399,7 @@ class PortfolioScene {
         this.uniforms.uTime.value = this.clock.getElapsedTime();
         this.mouse.lerp(this.mouseTarget, 0.05);
         this.uniforms.uMouse.value.copy(this.mouse);
+        this.applyScrollExit();
 
         this.renderFrame();
     }
@@ -346,7 +409,12 @@ class PortfolioScene {
         this.stop();
         window.removeEventListener('resize', this._onResize);
         window.removeEventListener('mousemove', this._onMouseMove);
+        window.removeEventListener('scroll', this._onScroll);
         document.removeEventListener('visibilitychange', this._onVisibility);
+        if (this.heroObserver) {
+            this.heroObserver.disconnect();
+            this.heroObserver = null;
+        }
         if (this.canvas) {
             this.canvas.removeEventListener('webglcontextlost', this._onContextLost);
             this.canvas.removeEventListener('webglcontextrestored', this._onContextRestored);

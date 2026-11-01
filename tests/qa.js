@@ -95,7 +95,7 @@ async function settleScroll(page, targetY, timeout = 4000) {
     return last;
 }
 
-async function newPage(browser, { width = 1440, height = 900, js = true, reduced = false, noWebGL = false, blockExternal = false } = {}) {
+async function newPage(browser, { width = 1440, height = 900, js = true, reduced = false, noWebGL = false, blockExternal = false, countDraws = false } = {}) {
     const page = await browser.newPage();
     openPages.push(page);
     await page.setViewport({ width, height });
