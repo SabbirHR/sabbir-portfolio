@@ -27,7 +27,7 @@
  *
  * Sticky-safety: a transform on `.project-card`/`.projects-grid` (or any
  * transformed ANCESTOR of a sticky element) breaks position:sticky, so
- * reveals animate CHILDREN only (.project-index, .project-main) and every
+ * reveals animate CHILDREN only (.project-main) and every
  * completed animation strips its inline styles.
  */
 import { animate, inView, scroll } from 'motion';
@@ -239,7 +239,7 @@ function splitTextNodes(el) {
  * Section reveals: fade-up with stagger on scroll, once per section.
  * Titles are excluded — they get the masked reveal above (a transform on the
  * same element would fight the word split). Sticky project cards are
- * transformed through their CHILDREN only (.project-index/.project-main):
+ * transformed through their CHILDREN only (.project-main):
  * a transformed .projects-grid or .project-card would break position:sticky.
  * -------------------------------------------------------------------------- */
 function initSectionReveals() {
@@ -247,7 +247,6 @@ function initSectionReveals() {
         '.section-tag',
         '.skill-group',
         '.service-row',
-        '.project-index',
         '.project-main',
         '.timeline-item',
         '.about-grid > div',
